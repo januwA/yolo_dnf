@@ -24,8 +24,6 @@ import win32print
 import heapq
 from PIL import Image, ImageGrab
 
-from sklearn.cluster import KMeans
-
 # import pyautogui 不要用这个库，cv2.imshow比例显示会有问题
 
 # class #############################################################################################################
