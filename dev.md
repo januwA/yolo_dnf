@@ -67,7 +67,7 @@ print(torch.cuda.is_available())  # 输出True表示GPU可用
 ```sh
 yolo task=detect mode=train model=yolov8n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\detect\train\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment2\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\trains"
+yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\trains\train3\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_guiQi\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\trains"
 ```
 
 - task=detect: 指定任务为目标检测
