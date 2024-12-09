@@ -1,15 +1,19 @@
 config = {
-  模式: "自动刷图",
-  调试窗口: "",
+  模式: "",
+  调试窗口: {
+    标题: "xxx",
+    宽高: [0, 0],
+    置顶: true
+  },
   模型路径: "C:\\Users\\16418\\Desktop\\风暴幽城\\trains\\train4\\weights\\best.pt",
   角色列表: [
     { 移速: [260, 170], 技能: '剑魂', 靠近放技能: 100 },
     { 移速: [320, 217], 技能: '狂战', 靠近放技能: 50 },
     { 移速: [260, 202], 技能: '枪炮', 靠近放技能: 200 },
-    { 移速: [260, 202], 技能: '鬼泣', 靠近放技能: 200 },
+    { 移速: [340, 340], 技能: '鬼泣', 靠近放技能: 150 },
   ],
   自动刷图: {
-    使用角色: 2,
+    使用角色: 0,
     路线阻碍: { "(0,0)": [[0, 1]] },
     匹配路线: [
       {
@@ -26,9 +30,9 @@ config = {
       }
     ],
     移动方式: {
-      打怪: { pad: 100, run: false, },
+      打怪: { pad: 100, run: true, },
       捡材料: { pad: 0, run: false, },
-      门: { pad: 5, run: false, },
+      门: { pad: 5, run: true, },
       随机游走: { run: false },
     },
     快捷键: {
@@ -36,11 +40,26 @@ config = {
       返回城镇: 'f12',
       移动物品: '0',
       普攻: 'x',
+      修理武器: 's',
+      确认: 'space',
+      esc: 'esc',
     },
     测试移速: {
       测试: false,
-      方向: '左',
+      方向: '下',
       run: false,
+      秒: 0.8,
+    },
+    延迟: {
+      截图: 0.3,
+      释放buff间隔: 1,
+      释放终极技能: 5,
+      按下普攻: 1,
+      领取奖励后: 3,
+      移动物品后: 2,
+      再次挑战后: 5,
+      玩家卡住: 5,
+      路线卡住: 15,
     },
     boss_bgr: [21, 20, 139],
     boss_tolerance: 20,
@@ -59,7 +78,7 @@ config = {
       { key: 's', ct: 8 },
       { key: 'w', ct: 26, charge: 1 },
       { key: 'g', ct: 19, },
-      { key: 'e', ct: 11, mk: 1, name: '猛龙' },
+      // { key: 'e', ct: 11, mk: 1, name: '猛龙' },
       { key: 'h', ct: 24, name: '幻影剑舞' },
       { key: 'q', ct: 5, mk: ["z"], name: '流星升' },
       { key: 'q', ct: 5, mk: ["c", "x"], name: '流星越' },
@@ -68,7 +87,7 @@ config = {
       { key: '下右右z', ct: 19, name: "流星落" },
       { key: '上下右右z', ct: 32, name: "无形斩" },
       { key: 'y', ct: 228, name: "3觉", boss: true },
-      { key: '右右空', ct: 20, name: "破极兵刃", buff: true },
+      { key: '右右空', ct: 1000, name: "破极兵刃", buff: true },
       { key: '下上空', ct: 27, name: "自动格挡", buff: true },
     ],
     狂战: [
@@ -83,22 +102,22 @@ config = {
 
       { key: 'y', ct: 291, boss: true },
       { key: 'h', ct: 54, boss: true },
-      { key: '右右空', ct: 20, buff: true }
+      { key: '右右空', ct: 1000, buff: true }
     ],
     枪炮: [
       { key: 'a', ct: 10 },
       { key: 's', ct: 13 },
       { key: 'd', ct: 31 },
+      { key: 'e', ct: 10 },
       { key: 'f', ct: 24 },
 
       { key: 'q', ct: 8, charge: 2 },
       { key: 'w', ct: 10, charge: 2 },
-      { key: 'e', ct: 10 },
       { key: 'r', ct: 37, charge: 2 },
 
       { key: 'y', ct: 305, boss: true },
       // { key: 't', ct: 189, boss: true },
-      { key: '右右空', ct: 20, buff: true }
+      { key: '右右空', ct: 1000, buff: true }
     ],
     鬼泣: [
       { key: 'a', ct: 8 },
@@ -115,19 +134,20 @@ config = {
 
       { key: 'y', ct: 276, boss: true },
       { key: 't', ct: 171, boss: true },
-      { key: '上下空', ct: 30, buff: true }
+      { key: '上下空', ct: 1000, buff: true },
+      { key: '空', ct: 40, buff: true },
     ]
   },
   程序变量: {
     ssr: [0.2, 0.7, 0.75, 0.75],
     游戏窗口标题: "地下城与勇士",
     predict: {
-      conf: 0.25,
+      conf:0.6,
       device: 0,
     },
     degrees2PosZh: {
       容差: 10
-    }
+    },
   },
   标记标签: ['玩家', '敌人', '门', '材料', '奖励', '赛利亚', '选择界面', '是否继续', '副本地图']
 }

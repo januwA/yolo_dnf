@@ -226,7 +226,7 @@ def find_nearest_target(player, target_list, min_distance):
 
         # 只要小于一定范围就可以返回了
         if distance < min_distance:
-            return nearest
+            return target
 
         if distance < min_distance:
             min_distance = distance
@@ -292,7 +292,7 @@ class Skill(object):
             self.mk = [self.key for _ in range(self.mk)]
 
     def reset_ct(self):
-        """充值了技能冷却时间"""
+        """重置技能冷却时间"""
         self.release_t = 0
 
     def can_release(self):
@@ -366,9 +366,8 @@ class SkillBar(object):
     # 释放所有buff技能
     def release_buff_all(self):
         for k in self.list:
-            if k.buff:
-                k.release()
-                time.sleep(0.1)
+            if k.buff and k.release():
+                time.sleep(config["自动刷图"]["延迟"]["释放buff间隔"])
 
     # 释放攻击技能
     def release_attack(self, count=1, boss=False, right=True):
@@ -383,18 +382,21 @@ class SkillBar(object):
             for k in self.list:
                 if k.boss and k.release(right):
                     c += 1
-            if c >= count:
-                return
+                    if c >= count:
+                        time.sleep(
+                            config["自动刷图"]["延迟"]["释放终极技能"]
+                        )  # 强制等待3秒技能动画
+                        return c
+                    time.sleep(0.2)
 
         for k in self.list:
             if k.buff or k.boss:
                 continue
-
             if k.release(right):
                 c += 1
-
-            if c >= count:
-                break
+                if c >= count:
+                    break
+                time.sleep(0.2)
 
         return c
 
@@ -404,19 +406,19 @@ class TestPlayerMoveSpeed:
         """测试玩家移动速度，确保在大地图中测试"""
         self.from_point = None
         self.to_point = None
-        self.move_seconds = 1
 
     def test(self, 玩家, keys, run):
+        move_seconds = config["自动刷图"]["测试移速"]["秒"]
         p_point = get_rect_point(玩家)
         if not self.from_point:
             self.from_point = p_point
             key_down_many(keys, zhKey=True, run=run)
-            time.sleep(self.move_seconds)
+            time.sleep(move_seconds)
             key_up_many(keys, zhKey=True)
         elif self.from_point and not self.to_point:
             self.to_point = p_point
             distance = calculate_distance(self.from_point, self.to_point)
-            ms = int(distance / self.move_seconds)
+            ms = int(distance / move_seconds)
             print(f"移速:{ms}")
             return ms
 
@@ -504,7 +506,7 @@ class GameStatus(object):
         self.player_on_screen_pos_zh = ""
         self.场景 = ""  # 副本中
         self.疲劳值 = 100
-        self.after_seconds = 0  # 过去了多少秒
+        self.next_room_time = 0  # 过去了多少秒
         self.is_move_to_next_room = False
         self.next_room_is_boss = False
 
@@ -549,7 +551,6 @@ class GameStatus(object):
         self.player_on_screen_pos_zh = ""
         self.next_room_info = None
         self.room_road_block = copy.deepcopy(self._room_road_block)
-        self.after_time = 0
         self.player_in_boss_room = False
 
         self.smap_grid = copy.deepcopy(self._smap_grid)
@@ -619,22 +620,26 @@ def get_smap_move_zh_pos(current_node, next_node):
 
     t_point = None
     x1, y1, x2, y2 = gs.ss_rect
+    sw = gs.gw_info["w"]
+    sh = gs.gw_info["h"]
 
     xc = (x1 + x2) / 2
     yc = (y1 + y2) / 2
 
-    pad = 50
-
     if m2 > m1:
+        pad = int(sw / 2)
         t_point = (xc, y2 + pad)
         return "下", t_point
     elif m2 < m1:
+        pad = int(sw / 2)
         t_point = (xc, y1 - pad)
         return "上", t_point
     elif c2 > c1:
+        pad = int(sh / 2)
         t_point = (x2 + pad, yc)
         return "右", t_point
     else:
+        pad = int(sh / 2)
         t_point = (x1 - pad, yc)
         return "左", t_point
 
@@ -784,7 +789,7 @@ def key_down_many(keys, zhKey=False, run=False):
         keys = list(map(lambda x: zhKey2key(x), list(keys)))
 
     if run and len(keys) >= 1:
-        key_press(keys[0])
+        key_press(keys[0], _pause=False)
         time.sleep(0.1)
         key_down_many(keys)
     else:
@@ -794,7 +799,7 @@ def key_down_many(keys, zhKey=False, run=False):
 
 
 def random_move(logname, run=False):
-    print(f"随机游走 {logname}")
+    # print(f"随机游走: {logname}")
     zh_keys = random.choice(random_moves_list)
     key_down_many(zh_keys, zhKey=True, run=run)
     time.sleep(0.3)
@@ -871,10 +876,11 @@ def player_attack(player, target, x=False):
     is_right = True
     if player and target:
         # 向哪个方向攻击
-        px, _ = get_rect_point(player)
-        tx, _ = get_rect_point(target)
+        px, _ = player if len(player) == 2 else get_rect_point(player)
+        tx, _ = player if len(target) == 2 else get_rect_point(target)
         if tx > px:
             key_press("right")
+            is_right = True
         else:
             key_press("left")
             is_right = False
@@ -882,7 +888,7 @@ def player_attack(player, target, x=False):
     if x:
         k = config["自动刷图"]["快捷键"]["普攻"]
         key_down(k)
-        time.sleep(2)
+        time.sleep(config["自动刷图"]["延迟"]["按下普攻"])
         key_up(k)
     else:
         if (
@@ -891,7 +897,7 @@ def player_attack(player, target, x=False):
         ):
             k = config["自动刷图"]["快捷键"]["普攻"]
             key_down(k)
-            time.sleep(1)
+            time.sleep(config["自动刷图"]["延迟"]["按下普攻"])
             key_up(k)
 
 
@@ -1026,7 +1032,17 @@ def smap_find_player_and_boss_point(img):
         gs.player_room_point = sorted(player_locs, key=lambda x: x[1])[-1][0]
     else:
         if gs.next_room_is_boss:
+            # BOSS房间是看不到玩家位置的
             gs.player_room_point = None
+        elif (
+            gs.to_boss_path_list
+            and gs.room_i + 1 < len(gs.to_boss_path_list)
+            and gs.is_move_to_next_room
+        ):
+            # 其他情况没看到则默认进入了下个房间，如果有进入房间的状态的话
+            print("默认移动到下个房间")
+            gs.player_room_point = gs.to_boss_path_list[gs.room_i + 1]
+            gs.is_move_to_next_room = False
 
     if not gs.boss_room_point and len(boss_locs):
         gs.boss_room_point_list = boss_locs
@@ -1086,24 +1102,16 @@ def find_player_current_room_and_next_room():
             gs.next_room_is_boss = next_room == gs.boss_room_point
             gs.next_room_info = get_smap_move_zh_pos(gs.player_room_point, next_room)
 
-            # print(
-            #     f"获取到了下个房间位置: {gs.next_room_info} {next_room} room_i:{room_i}"
-            # )
+            # print(f"下个房间位置: {gs.next_room_info[0]}")
         except:
             print("走错房间, 未在规定路线内")
             key_up_many()
             skill_bar.release_buff_all()
             gs.reset_path_status()
     else:
-        # 到了boss房间是找不到玩家的位置的
-        if (
-            not gs.player_room_point
-            and gs.boss_room_point
-            and gs.to_boss_path_list
-            and gs.next_room_is_boss
-        ):
-            if not gs.player_in_boss_room:
-                print("BOSS 房间")
+        if not gs.player_room_point:
+            if gs.next_room_is_boss and not gs.player_in_boss_room:
+                # print("BOSS房间")
                 gs.player_in_boss_room = True
                 if config["自动刷图"]["进BOSS房间直接释放技能"]:
                     skill_bar.release_attack(1, gs.player_in_boss_room)
@@ -1173,29 +1181,25 @@ def handle_door_list(box_map: dict, player):
     if gs.next_room_info:
         next_room_pos_zh = gs.next_room_info[0]
         if next_room_pos_zh in gs.player_on_screen_pos_zh:
-            # print(f"走到位了 {gs.player_on_screen_pos_zh} 门列表:{len(door_list)}")
-            gs.after_seconds = 0
+            gs.next_room_time = 0
             key_up_many()
 
             target_point = find_door(next_room_pos_zh, door_list)
             if target_point:
-                gs.after_seconds = 0
-
                 # 前往下个房间前释放buff
                 skill_bar.release_buff_all()
                 params = config["自动刷图"]["移动方式"]["门"]
-                if move_to_target(
+                move_to_target(
                     player,
                     target_point,
                     params["pad"],
                     run=params["run"],
-                    target_is_point=True,
-                ):
-                    gs.is_move_to_next_room = True
-                    key_up_many()
+                )
+                gs.is_move_to_next_room = True
+                key_up_many()
             else:
                 print(
-                    f"没找到门 从{gs.player_room_point}到{ gs.to_boss_path_list[gs.room_i + 1] }"
+                    f"没找到门 从{gs.player_room_point}到{gs.to_boss_path_list[gs.room_i + 1]}"
                 )
 
                 # 提供了匹配路线不可能找不到门 或则当前路线以改变
@@ -1209,20 +1213,24 @@ def handle_door_list(box_map: dict, player):
             if not gs._match_path or gs.to_boss_path_list not in list(
                 map(lambda x: x["path"], gs._match_path)
             ):
-                if gs.after_seconds == 0:
-                    gs.after_seconds = time.time()
+                if gs.next_room_time == 0:
+                    gs.next_room_time = time.time()
 
                 # 说明这条路不通的
-                if gs.after_seconds and time.time() - gs.after_seconds > 15:
+                过去了几秒 = time.time() - gs.next_room_time
+                if (
+                    gs.next_room_time
+                    and 过去了几秒 > config["自动刷图"]["延迟"]["路线卡住"]
+                ):
                     ok = False
                     for door in door_list:
                         ok = is_out_ssr(next_room_pos_zh, door)
                         if ok:
-                            gs.after_seconds = 0
+                            gs.next_room_time = 0
                             break
-                    print(f"还没有到{next_room_pos_zh}，匹配门: {ok}")
+                    print(f"还没有到{next_room_pos_zh}({过去了几秒})，匹配门:{ok}")
                     if not ok:
-                        gs.after_seconds = 0
+                        gs.next_room_time = 0
                         gs.add_room_block()
                         return
                     else:
@@ -1232,14 +1240,20 @@ def handle_door_list(box_map: dict, player):
                         )
 
             screen_point = gs.next_room_info[1]
-            move_to_target(
-                gs.player_point,
-                screen_point,
-                run=True,
-                pad=5,
-                player_is_point=True,
-                target_is_point=True,
-            )
+            if screen_point:
+                # move_to_target_xy(gs.player_point, screen_point, run=False)
+                move_to_target(
+                    gs.player_point,
+                    screen_point,
+                    run=config["自动刷图"]["移动方式"]["门"]["run"],
+                    pad=5,
+                )
+            else:
+                key_down_many(
+                    next_room_pos_zh,
+                    zhKey=True,
+                    run=config["自动刷图"]["移动方式"]["门"]["run"],
+                )
 
 
 def move_to_target(
@@ -1247,12 +1261,10 @@ def move_to_target(
     target,
     pad,
     run=False,
-    player_is_point=False,
-    target_is_point=False,
 ):
     """移动到目标返回true"""
-    p_point = player if player_is_point else get_rect_point(player)
-    t_point = target if target_is_point else get_rect_point(target)
+    p_point = player if len(player) == 2 else get_rect_point(player)
+    t_point = target if len(target) == 2 else get_rect_point(target)
 
     distance, degrees = calculate_distance_and_angle(p_point, t_point)
 
@@ -1277,37 +1289,42 @@ def move_to_target(
     return False
 
 
-def move_to_target_patch_xy(player_point, target_point, pad, run=False):
+def move_to_target_x(player_point, target_point, run=False):
+    _, py = player_point
+    tx, _ = target_point
+    # 修补x
+    player_point_to = (tx, py)
+    move_to_target(
+        player_point,
+        player_point_to,
+        1,
+        run=run,
+    )
+    return player_point_to
+
+
+def move_to_target_y(player_point, target_point, run=False):
+    px, _ = player_point
+    _, ty = target_point
+    # 修补y
+    player_point_to = (px, ty)
+    move_to_target(
+        player_point,
+        player_point_to,
+        1,
+        run=run,
+    )
+    return player_point_to
+
+
+def move_to_target_xy(player_point, target_point, run=False):
     """如果x打就修补x,否则修补y"""
     px, py = player_point
     tx, ty = target_point
     if math.fabs(tx - px) > math.fabs(ty - py):
-        # 修补x
-        if math.fabs(tx - px) > pad:
-            player_to_point = (tx, py)
-            move_to_target(
-                player_point,
-                player_to_point,
-                1,
-                run=run,
-                player_is_point=True,
-                target_is_point=True,
-            )
-            player_point = player_to_point
+        return move_to_target_x(player_point, target_point, run)
     else:
-        # 修补y
-        if math.fabs(ty - py) > pad:
-            player_to_point = (px, ty)
-            move_to_target(
-                player_point,
-                player_to_point,
-                1,
-                run=run,
-                player_is_point=True,
-                target_is_point=True,
-            )
-            player_point = player_to_point
-    return player_point
+        return move_to_target_y(player_point, target_point, run)
 
 
 def find_player(player_list):
@@ -1318,23 +1335,25 @@ def find_player(player_list):
         # 在屏幕上的点位
         player_point = get_rect_point(player)
 
-        if gs.player_point and player_point:
+        if gs.player_point_before and player_point:
             # 检查两次的位置是否一样，如果被建筑卡住这很常见
-            distance = calculate_distance(player_point, gs.player_point)
-            if (
-                distance <= 5  # 距离变化太低
-                and gs.player_point_time != 0  # 之前有设置
-                and time.time() - gs.player_point_time > 5  # 过去了5秒
-            ):
-                key_up_many()
-                random_move(
-                    "可能卡住了", run=config["自动刷图"]["移动方式"]["随机游走"]["run"]
-                )
-
-        gs.player_point_before = gs.player_point
-        gs.player_point = player_point
+            distance = calculate_distance(player_point, gs.player_point_before)
+            if distance <= 5:
+                if (
+                    gs.player_point_time != 0
+                    and time.time() - gs.player_point_time
+                    > config["自动刷图"]["延迟"]["玩家卡住"]
+                ):
+                    key_up_many()
+                    random_move(
+                        "卡住了",
+                        run=config["自动刷图"]["移动方式"]["随机游走"]["run"],
+                    )
+                return player
 
         gs.player_point_time = time.time()
+        gs.player_point_before = gs.player_point
+        gs.player_point = player_point
 
         # 处于屏幕哪个位置 上中下左？
         gs.player_on_screen_pos_zh = get_ssr_pos_zh(gs.player_point)
@@ -1367,7 +1386,7 @@ def predict_source(source):
     # [1413.51, 880.17, 1516.58, 1162.73, 0.88, 1.0],
     # pprint.pp(boxes2)
 
-    if config["调试窗口"]:
+    if config["调试窗口"]["标题"]:
         player_list = box_map.get("玩家")
         player = None
 
@@ -1448,6 +1467,8 @@ def auto_game(box_map: dict, img):
             print("可能没有疲劳了，返回城镇")
             key_press(config["自动刷图"]["快捷键"]["返回城镇"])
             time.sleep(1)
+
+            # TODO: 点击esc，点击选择角色区域，选择下个角色
             # 停止程序
             return True
 
@@ -1457,25 +1478,28 @@ def auto_game(box_map: dict, img):
 
         if box_map.get("奖励"):
             key_up_many()
-
-            print("领取奖励")
+            # print("领取奖励")
             time.sleep(1)
-            key_press("esc")
-
-            # 等待3秒
-            time.sleep(3)
+            key_press(config["自动刷图"]["快捷键"]["esc"])
+            time.sleep(config["自动刷图"]["延迟"]["领取奖励后"])
 
             key_press(config["自动刷图"]["快捷键"]["移动物品"])
-            time.sleep(2)
+            time.sleep(config["自动刷图"]["延迟"]["移动物品后"])
 
+            # 自动修理武器
+            key_press(config["自动刷图"]["快捷键"]["修理武器"])
+            time.sleep(0.5)
+            key_press(config["自动刷图"]["快捷键"]["确认"])
+            return
+
+        if box_map.get("是否继续"):
+            key_up_many()
             # 初始化一些状态
             gs.reset_fb_status()
-
             # 继续挑战
             key_press(config["自动刷图"]["快捷键"]["再次挑战"])
-
             # 等会避免多余的动作
-            time.sleep(5)
+            time.sleep(config["自动刷图"]["延迟"]["再次挑战后"])
             return
 
         if player:
@@ -1495,22 +1519,15 @@ def auto_game(box_map: dict, img):
                 key_up_many()
                 gs.challenge_again = False
 
-                if gs.is_move_to_next_room:
-                    # print("可能移动到了下一个房间")
-                    gs.is_move_to_next_room = False
+                # if gs.is_move_to_next_room:
+                #     print("可能移动到了下一个房间")
+                #     gs.is_move_to_next_room = False
 
                 target = find_nearest_target(player, enemy_list, gs.靠近放技能)
                 if target:
                     params = config["自动刷图"]["移动方式"]["打怪"]
                     player_point = get_rect_point(player)
                     target_point = get_rect_point(target)
-
-                    # player_point = move_to_target_patch_xy(
-                    #     player_point,
-                    #     target_point,
-                    #     10,
-                    #     run=params["run"],
-                    # )
 
                     if gs.靠近放技能 > 0:
                         # 站在目标的x轴上放技能
@@ -1525,17 +1542,22 @@ def auto_game(box_map: dict, img):
                                 target_point[1],
                             )
 
+                    player_point = move_to_target_y(
+                        player_point, target_point, run=params["run"]
+                    )
+                    player_point = move_to_target_x(
+                        player_point, target_point, run=params["run"]
+                    )
                     ok = move_to_target(
                         player_point,
                         target_point,
                         params["pad"],
                         run=params["run"],
-                        player_is_point=True,
-                        target_is_point=True,
                     )
                     if config["自动刷图"]["移动后直接释放技能"] or ok:
-                        player_attack(player, target)
-                        time.sleep(1)
+                        player_attack(player_point, target)
+                else:
+                    print("没找到最近的敌人")
 
             elif materials_list and not gs.player_in_boss_room:
                 key_up_many()
@@ -1543,21 +1565,26 @@ def auto_game(box_map: dict, img):
                 target = find_nearest_target(player, materials_list, gs.靠近放技能)
                 if target:
                     params = config["自动刷图"]["移动方式"]["捡材料"]
+                    player_point = get_rect_point(player)
                     target_point = get_rect_point(target)
-                    player_point = move_to_target_patch_xy(
-                        get_rect_point(player), target_point, 50, run=params["run"]
+
+                    player_point = move_to_target_y(
+                        player_point, target_point, run=params["run"]
+                    )
+                    player_point = move_to_target_x(
+                        player_point, target_point, run=params["run"]
                     )
 
-                    move_to_target(
-                        player_point,
-                        target_point,
-                        params["pad"],
-                        run=params["run"],
-                        player_is_point=True,
-                        target_is_point=True,
-                    )
-                    key_up_many()
-                    key_press(config["自动刷图"]["快捷键"]["普攻"])
+                    # move_to_target(
+                    #     player_point,
+                    #     target_point,
+                    #     params["pad"],
+                    #     run=params["run"],
+                    # )
+                    # key_up_many()
+                    # key_press(config["自动刷图"]["快捷键"]["普攻"])
+                else:
+                    print("没找到最近的材料")
 
             elif door_list and not gs.player_in_boss_room:  # 在boss房间不管门
                 key_up_many()
@@ -1579,8 +1606,6 @@ def auto_game(box_map: dict, img):
                     rect_center(gs.ss_rect),
                     10,
                     run=False,
-                    player_is_point=True,
-                    target_is_point=True,
                 )
                 gs.player_point_before = None
             else:
@@ -1636,7 +1661,16 @@ def predict_game():
         print("没有TOLO模型")
         return
 
-    # cv2.namedWindow(config['调试窗口'], cv2.WINDOW_NORMAL)
+    调试窗口_标题 = config["调试窗口"]["标题"]
+    if 调试窗口_标题:
+        cv2.namedWindow(调试窗口_标题, cv2.WINDOW_NORMAL)
+        wh = config["调试窗口"]["宽高"]
+        if wh[0] > 0 and wh[1] > 0:
+            cv2.resizeWindow(
+                调试窗口_标题,
+                wh[0],
+                wh[1],
+            )
 
     with pynput.keyboard.Listener(on_press=lambda key: not (key == gs.swich_key)) as hk:
         loop_i = 1
@@ -1667,13 +1701,16 @@ def predict_game():
             if mode == "自动刷图":
                 if auto_game(box_obj, in_img):
                     break
+                if config["自动刷图"]["延迟"]["截图"] > 0:
+                    time.sleep(config["自动刷图"]["延迟"]["截图"])
 
             # 显示一个测试窗口
-            if config["调试窗口"]:
-                cv2.imshow(config["调试窗口"], img)
-                # cv2.resizeWindow(config['调试窗口'], 700, 400)
-                cv2.setWindowProperty(config["调试窗口"], cv2.WND_PROP_TOPMOST, 1)
+            if 调试窗口_标题:
+                cv2.imshow(调试窗口_标题, img)
+                if config["调试窗口"]["置顶"]:
+                    cv2.setWindowProperty(调试窗口_标题, cv2.WND_PROP_TOPMOST, 1)
                 cv2.waitKey(1)
+
     cv2.destroyAllWindows()
 
 
