@@ -67,7 +67,9 @@ print(torch.cuda.is_available())  # 输出True表示GPU可用
 ```sh
 yolo task=detect mode=train model=yolov8n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\trains\train3\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_guiQi\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\trains"
+yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\trains\train4\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_yuanSu\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\trains"
+
+yolo task=detect mode=train model="C:\Users\16418\Desktop\dnf_py\yolov8n.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_merge_player_enemy\YOLODataset\dataset.yaml" epochs=30 imgsz=800 device=0 project="C:\Users\16418\Desktop\风暴幽城\test-trains"
 ```
 
 - task=detect: 指定任务为目标检测
@@ -243,4 +245,71 @@ labelme data_annotated/ --labels labels.txt  # 使用文件指定标签列表
   "imageHeight": 720,
   "imageWidth": 1280
 }
+```
+
+---
+
+## 风暴怪物图
+
+### 小怪
+```
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_normal_abyssarcher.NPK
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_normal_abyssknight.NPK
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_normal_lamper_z.NPK
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_normal_minelizard_z.NPK
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_normal_porturtle_z.NPK
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_normal_repairedgolem_z.NPK
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_normal_t5000_z.NPK
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_normal_web_spider_z.NPK
+```
+
+### 精英
+
+```
+BOSS
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_abysswalker.NPK
+
+贝奇
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_beckey.NPK
+
+光之卡巴莉
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_calbaryoflight.NPK
+
+暗之古尔特
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_golgotaofdarkness.NPK
+
+黄金小丑
+sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_revivedgoldclown.NPK
+```
+
+
+---
+
+
+```
+查看全职业特效
+sprite_character_[a-z]*_effect.NPK
+
+effect 特效
+equipment 时装
+weapon  武器
+growtype 生长类型
+avatar 
+avatar_skin 全身
+
+
+加了at则是切换性别
+sprite_character_<职业>_[at]equipment_avatar_skin.NPK
+sprite_character_mage_atequipment_avatar_skin.NPK
+
+priest 圣职者
+mage 魔法师
+swordman 鬼剑士
+thief 暗夜使者
+archer 弓箭手
+demoniclancer 魔枪
+fighter 格斗家
+gunblader 枪手？
+gunner  枪手
+knight  守护骑士
 ```

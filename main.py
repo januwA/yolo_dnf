@@ -912,7 +912,7 @@ def init_smap_items_rect_grid(small_map, pad: int):
         small_map = sorted(small_map, key=lambda x: x[box_param["概率"]])[-1]
 
     if not small_map:
-        print("没有识别到 副本地图")
+        # print("没有识别到 副本地图")
         return
 
     gs.smap_points = []
@@ -1214,10 +1214,11 @@ def handle_door_list(box_map: dict, player):
                 map(lambda x: x["path"], gs._match_path)
             ):
                 if gs.next_room_time == 0:
+                    print("设置1")
                     gs.next_room_time = time.time()
 
                 # 说明这条路不通的
-                过去了几秒 = time.time() - gs.next_room_time
+                过去了几秒 = int(time.time() - gs.next_room_time)
                 if (
                     gs.next_room_time
                     and 过去了几秒 > config["自动刷图"]["延迟"]["路线卡住"]
@@ -1683,8 +1684,9 @@ def predict_game():
                 print(f"目录已存在: {out_dir}")
                 return
 
+        in_img = None
+
         while hk.running:
-            in_img = None
             try:
                 in_img = window_capture(gs.hwnd, toCv2=True)
             except:
@@ -1759,7 +1761,29 @@ def bootstrap():
     gs.hwnd = win32gui.GetForegroundWindow()
     window_title = win32gui.GetWindowText(gs.hwnd)
     if window_title.find(config["程序变量"]["游戏窗口标题"]) != -1:
-        predict_game()
+        if config["模式"] == "截图模式":
+            if not os.path.exists(config["截图模式"]["输出目录"]):
+                print(f"输出目录不存在: {config['截图模式']['输出目录']}")
+                return
+
+            i = 1
+            print(f"点击insert截屏, 点击:{gs.swich_key}退出")
+
+            def on_press(key):
+                nonlocal i
+                if key == pynput.keyboard.Key.insert:
+                    op = os.path.join(config["截图模式"]["输出目录"], f"{i}.jpg")
+                    if cv2.imwrite(op, window_capture(gs.hwnd, toCv2=True)):
+                        print(f"截图: {op}")
+                        i += 1
+                if key == gs.swich_key:
+                    return False
+                return True
+
+            with pynput.keyboard.Listener(on_press=on_press) as hk:
+                hk.join()
+        else:
+            predict_game()
     key_up_many()
 
 
