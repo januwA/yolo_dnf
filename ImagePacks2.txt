@@ -1,5 +1,5 @@
 sprite.NPK
-sprite_character.NPK  可以看到全职名称
+sprite_character.NPK
 sprite_character_archer_effect.NPK
 sprite_character_archer_effect_acrobaticraid.NPK
 sprite_character_archer_effect_activeequalizer.NPK

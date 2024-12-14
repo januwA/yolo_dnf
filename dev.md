@@ -1,5 +1,3 @@
-## 添加ahk环境变量
-
 > 项目目录不要到处移动，移动后py venv虚拟环境会出问题
 
 ## ffmpeg提取视频帧
@@ -38,13 +36,14 @@ nvidia-smi.exe 路径 "C:\Windows\System32\DriverStore\FileRepository\nvdm.inf_a
 ```sh
 pip install ultralytics
 pip install supervision labelme labelme2yolo huggingface_hub
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+pip install torch torchvision torchaudio --no-cache-dir --index-url https://download.pytorch.org/whl/cu124
 ```
 
 ## 标注
 
-- labelme 本地标注工具
+- labelme 本地标注工具，C:\Users\16418\.labelmerc 默认配置文件
 - labelme2yolo --json_dir labelme_out_dir 将labelme输出的配置文件生成为数据集
+- labelme_draw_json [-h] json_file
 
 
 运行测试:
@@ -67,9 +66,9 @@ print(torch.cuda.is_available())  # 输出True表示GPU可用
 ```sh
 yolo task=detect mode=train model=yolov8n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\trains\train4\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_yuanSu\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\trains"
+yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\trains\train6\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_merge_player_enemy\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\test-trains"
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\dnf_py\yolov8n.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_merge_player_enemy\YOLODataset\dataset.yaml" epochs=30 imgsz=800 device=0 project="C:\Users\16418\Desktop\风暴幽城\test-trains"
+yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\test-trains\train3\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_merge4_1\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\test-trains"
 ```
 
 - task=detect: 指定任务为目标检测
@@ -102,89 +101,6 @@ yolo task=detect mode=predict model="C:\Users\16418\Desktop\dnf_py\runs\detect\t
 - source=1.mp4 要进行检测的视频文件路径或图片目录
 - device=0 指定使用哪个GPU进行检测
 
-
----
-
-
-```py
-
-# 将推理结果转换为 supervision.Detections 对象
-detections = sv.Detections.from_ultralytics(result)
-pprint.pprint(detections)
-
-oriented_box_annotator = sv.OrientedBoxAnnotator()
-
-annotated_frame = oriented_box_annotator.annotate(
-    # scene=cv2.imread("3.jpg"),
-    scene=cv2.imread(im1),
-    detections=detections,
-)
-
-annotated_frame = sv.resize_image(annotated_frame, keep_aspect_ratio=True)
-sv.cv2_to_pillow(annotated_frame)
-
-# 创建一个 BoxAnnotator 对象，用于绘制边框，并设置边框厚度为 4
-annotator = sv.BoxAnnotator(thickness=2)
-
-# 使用 annotator 对象在图像上绘制检测到的目标的边框
-annotated_image = annotator.annotate(im1, results)
-
-# 创建一个 LabelAnnotator 对象，用于添加标签，并设置标签字体大小为 2 和厚度为 2
-annotator = sv.LabelAnnotator(text_scale=1, text_thickness=1)
-
-# 使用 annotator 对象在图像上添加检测到的目标的标签
-annotated_image = annotator.annotate(annotated_image, results)
-
-# 使用 plot_image 函数显示标注后的图像
-sv.plot_image(annotated_image)
-```
-
-
----
-
-## 测试玩家移速：
-
-### 测试1秒结果
-
-注意不要让屏幕移动
-
-```
-按下: right
-抬起: right
-移速:250.12197024651792
-
-点击: right
-按下: right
-抬起: right
-移速:508.35519078691425
-
-按下: right
-按下: up
-抬起: right
-抬起: up
-移速:298.75073221667594
-
-按下: right
-抬起: right
-移速:241.0
-
-按下: right
-抬起: right
-移速:243.0514348857048
-
-按下: down
-抬起: down
-移速:170.0
-
-按下: up
-抬起: up
-移速:173.0028901492689
-```
-
-```
-player:0,0  boss:0,3
-player:1,0  boss:1,5
-```
 
 ## 标注文件json
 
@@ -282,11 +198,25 @@ sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_golgota
 sprite_contents_2022_110levelnormaldungeon_destroyedcastleofdead_monster_revivedgoldclown.NPK
 ```
 
-
 ---
 
 
 ```
+右上小地图
+sprite_interface2_minimap_dungeon.NPK
+
+城镇地图的切换画面和副本进入画面
+sprite_map_cutscene.NPK 
+
+黑暗大地的副本门
+sprite_map_dimentiongate_blackearth_gate.NPK
+sprite_map_.*gate.*
+sprite_map_.*pathgate.*
+
+赛利亚进门
+sprite_map_town_01_seria_room_gate.NPK
+sprite_map_town_01_seria_room.NPK
+
 查看全职业特效
 sprite_character_[a-z]*_effect.NPK
 
@@ -296,20 +226,72 @@ weapon  武器
 growtype 生长类型
 avatar 
 avatar_skin 全身
+pathgate  通道，门
+town_moonlightpub 城镇月光酒吧
 
 
 加了at则是切换性别
 sprite_character_<职业>_[at]equipment_avatar_skin.NPK
-sprite_character_mage_atequipment_avatar_skin.NPK
+sprite_character_knight_equipment_avatar_skin.NPK
 
 priest 圣职者
 mage 魔法师
 swordman 鬼剑士
 thief 暗夜使者
 archer 弓箭手
-demoniclancer 魔枪
+demoniclancer 魔枪士
 fighter 格斗家
-gunblader 枪手？
+gunblader 枪剑士
 gunner  枪手
-knight  守护骑士
+knight  守护者
 ```
+
+---
+
+```sh
+python -m venv vv
+
+pip freeze > requirements.txt
+pip install -r requirements.txt
+pip uninstall -r requirements.txt -y
+```
+
+```sh
+# 安装时出现hash不匹配
+pip cache purge # 清理缓存
+--upgrade # 更新到最新
+--no-cache-dir --no-deps # 跳过hash检测
+
+# 基本
+pip install pynput
+pip install pydirectinput
+pip install opencv-python
+pip install ultralytics
+pip install pywin32
+pip install json5
+
+# gpu
+pip install torch torchvision torchaudio --no-cache-dir --index-url https://download.pytorch.org/whl/cu124
+
+# 打包工具
+pip install pyinstaller
+```
+
+## 打包
+
+```
+pyinstaller --upx-dir=D:\apps\upx-4.2.4-win64 -F main.py
+
+执行打包的exe出现错误
+NameError name 'name' is not defined
+vv\Lib\site-packages\torch\_numpy\_ufuncs.py
+
+有两个地方都有name问题
+for name in _binary:
+    ufunc = getattr(_binary_ufuncs_impl, name)
+    ufunc_name = name 
+    vars()[ufunc_name] = deco_binary_ufunc(ufunc)
+
+```
+
+虚拟机需要安装`Visual C++`和`DirectX`
