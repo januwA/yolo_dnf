@@ -280,7 +280,11 @@ pip install pyinstaller
 ## 打包
 
 ```
-pyinstaller --upx-dir=D:\apps\upx-4.2.4-win64 -F main.py
+单个exe，运行速度慢
+pyinstaller -F main.py
+
+pyinstaller main.py
+pyinstaller --upx-dir D:\apps\upx-4.2.4-win64 main.py
 
 执行打包的exe出现错误
 NameError name 'name' is not defined

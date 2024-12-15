@@ -291,7 +291,6 @@ class Skill(object):
         buff=False,
         boss=False,
         charge=0,
-        wait=0,
         name="",
     ):
         """
@@ -302,7 +301,6 @@ class Skill(object):
         boss: 这个技能只会在boss房间释放
         charge: 设置蓄力多少秒
         name: 技能名称
-        wait: 释放此技能等待多久，有些节能持续时间很长
         """
         self.key = None
         self.lkey = None
@@ -312,7 +310,6 @@ class Skill(object):
         self.name = name
         self.buff = buff
         self.ct = ct
-        self.wait = wait
 
         # 如果包含中文则认定为指令
         if is_chinese(key):
@@ -378,10 +375,6 @@ class Skill(object):
             for k in self.mk:
                 key_press(k)
                 time.sleep(0.1)
-
-        # 等待技能动画
-        if self.wait:
-            time.sleep(self.wait)
 
         self.release_t = time.time()
 
@@ -811,7 +804,6 @@ def change_player():
             boss=obj.get("boss", False),
             charge=obj.get("charge", 0),
             name=obj.get("name", ""),
-            wait=obj.get("wait", 0),
         )
         skill_bar.add(sk)
 
@@ -913,9 +905,7 @@ def match_img_click(temp_gray: cv2.typing.MatLike, conf: float, click=True, draw
         if click:
             sx = int(sx / config["程序变量"]["屏幕缩放"])
             sy = int(sy / config["程序变量"]["屏幕缩放"])
-            pydirectinput.mouseDown(sx, sy)
-            time.sleep(0.3)
-            pydirectinput.mouseUp(sx, sy)
+            mouse_click(sx, sy)
         return True
 
     return False
@@ -1075,6 +1065,20 @@ def cv2_draw_auxiliary_line(p_point, t_point):
     )
 
 
+def mouse_down(sx, sy):
+    pydirectinput.mouseDown(sx, sy)
+
+
+def mouse_up(sx, sy):
+    pydirectinput.mouseUp(sx, sy)
+
+
+def mouse_click(sx, sy):
+    mouse_down(sx, sy)
+    time.sleep(0.3)
+    mouse_up(sx, sy)
+
+
 def key_press(key, _pause=True):
     if is_chinese(key):
         key = zhKey2key(key)
@@ -1160,6 +1164,8 @@ def window_capture(hwnd, toCv2=False, usePIL=False):
         real_w = win32print.GetDeviceCaps(hwndDC, win32con.DESKTOPHORZRES)
         apparent_w = win32api.GetSystemMetrics(0)
         gs.gw_info["scale"] = int(real_w / apparent_w)  # 计算出用户屏幕缩放了几倍
+        if config["程序变量"]["屏幕缩放"] < 0:
+            config["程序变量"]["屏幕缩放"] = gs.gw_info["scale"]
 
     # 获取窗口尺寸
     rect = win32gui.GetWindowRect(hwnd)
@@ -1329,8 +1335,6 @@ def match_smap_room_loc(smap):
         x1 = smap[box_param["x1"]]
         y1 = y2
 
-    print(player_point, gs.player_room_point, is_find_player)
-
     if not is_find_player:
         if gs.next_room_is_boss():
             # BOSS房间是看不到玩家位置的
@@ -1384,13 +1388,13 @@ def find_player_current_room_and_next_room():
             room_i = gs.room_path.index(gs.player_room_point)
 
             # 到达下个房间先加buff
-            if room_i > pre_room_i:
-                # print(f"房间已到达 {gs.player_room_point}")
-                skill_bar.release_buff_all()
+            # if room_i > pre_room_i:
+            # print(f"房间已到达 {gs.player_room_point}")
+            # skill_bar.release_buff_all()
 
             gs.room_i = room_i
         except:
-            skill_bar.release_buff_all()
+            # skill_bar.release_buff_all()
             当前房间 = gs.player_room_point
             上个房间 = gs.room_path[gs.room_i]
             print(f"走错房间 当前房间:{当前房间} 上个房间:{上个房间} {gs.room_i=}")
@@ -1479,7 +1483,7 @@ def handle_door_list(box_map: dict, player):
             target_point = find_door(next_room_pos_zh, door_list)
             if target_point:
                 # 前往下个房间前释放buff
-                skill_bar.release_buff_all()
+                # skill_bar.release_buff_all()
                 params = config["刷图模式"]["移动方式"]["门"]
                 # print(f"房间移动到 {gs.room_path[gs.room_i + 1]}")
                 move_to_target(
@@ -1645,6 +1649,9 @@ def find_player(player_list):
                     > config["刷图模式"]["延迟"]["玩家卡住"]
                 ):
                     key_up_many()
+                    key_down(config["刷图模式"]["快捷键"]["普攻"])
+                    time.sleep(0.5)
+                    key_up_many()
                     random_move(
                         "卡住了",
                         run=config["刷图模式"]["移动方式"]["随机游走"]["run"],
@@ -1675,7 +1682,6 @@ def predict_source():
     # print(result.names)
     game_img2 = np.array(
         result.plot(
-            conf=params["conf"],
             labels=params["labels"],
             boxes=params["boxes"],
             line_width=params["line_width"],
@@ -1785,6 +1791,7 @@ def auto_game(box_map: dict):
             time.sleep(5)
             gs.场景 = "副本中"
         else:
+            print("没找到 副本地图")
             key_press("up")
             time.sleep(0.5)
 
@@ -1861,12 +1868,14 @@ def auto_game(box_map: dict):
                 gs.default_move_room = False
                 gs.next_room_time = 0
 
-                if gs.is_move_to_next_room:
-                    gs.is_move_to_next_room = False
-                    if gs.next_room_is_boss() and not gs.player_in_boss_room:
-                        join_boss_room("移动判断")
-                elif gs.next_room_is_boss() and match_img_click(
-                    boss_feature_temp_gray, click=False
+                if (
+                    not gs.player_in_boss_room
+                    and gs.next_room_is_boss()
+                    and match_img_click(
+                        boss_feature_temp_gray,
+                        config["程序变量"]["置信度"]["领主特征"],
+                        click=False,
+                    )
                 ):
                     join_boss_room("匹配判断")
 
@@ -1893,19 +1902,17 @@ def auto_game(box_map: dict):
                     player_point = move_to_target_x(
                         player_point, target_point, run=params["run"]
                     )
-                    ok = False
                     # ok = move_to_target(
                     #     player_point,
                     #     target_point,
                     #     params["pad"],
                     #     run=params["run"],
                     # )
-                    if config["刷图模式"]["移动后直接释放技能"] or ok:
-                        player_attack(player_point, target)
-                        if config["刷图模式"]["延迟"]["攻击后"] > 0:
-                            key_down(config["刷图模式"]["快捷键"]["普攻"])
-                            time.sleep(config["刷图模式"]["延迟"]["攻击后"])
-                            key_up_many()
+                    player_attack(player_point, target)
+                    if config["刷图模式"]["延迟"]["攻击后"] > 0:
+                        key_down(config["刷图模式"]["快捷键"]["普攻"])
+                        time.sleep(config["刷图模式"]["延迟"]["攻击后"])
+                        key_up_many()
 
                     return False
                 else:
@@ -1918,11 +1925,18 @@ def auto_game(box_map: dict):
 
                 target = find_nearest_target(player, materials_list, gs.释放距离)
                 if target:
-                    params = config["刷图模式"]["移动方式"]["捡材料"]
+                    params = {
+                        "run": False,
+                        "pad": 0,
+                    }
                     player_point = get_rect_point(player)
                     target_point = get_rect_point(target)
 
                     distance = calculate_distance(player_point, target_point)
+
+                    # 超过了一半的屏幕
+                    params["run"] = distance > gs.gw_info["w"] / 2
+
                     if distance < random.randint(80, 120):
                         # 距离足够小，斜着走也能捡到
                         move_to_target(
@@ -2076,12 +2090,14 @@ def img_to_labelme_file(img, box_obj: dict, index: int, out_dir):
 
 
 def on_press_listener(key):
+    from pynput.keyboard import Key
+
     try:
         if key == gs.swich_key:
             return False
 
         if (
-            key == pynput.keyboard.Key.insert
+            key == Key.insert
             and os.path.exists(config["截图"]["目录"])
             and game_img is not None
         ):
@@ -2093,29 +2109,26 @@ def on_press_listener(key):
 
         x, y = gs.move_speed
         step = 10
-        match key.char:
-            case "=":
-                gs.move_speed = (x + step, y)
-                print(f"移速: +x {gs.move_speed}")
-            case "-":
-                gs.move_speed = (x - step, y)
-                print(f"移速: -x {gs.move_speed}")
-            case "0":
-                gs.move_speed = (x, y + step)
-                print(f"移速: +y {gs.move_speed}")
-            case "9":
-                gs.move_speed = (x, y - step)
-                print(f"移速: -y {gs.move_speed}")
+        shortcut_keys = config["刷图模式"]["快捷键"]
+        if key.char == shortcut_keys["加x移速"]:
+            gs.move_speed = (x + step, y)
+            print(f"移速: +x {gs.move_speed}")
+        elif key.char == shortcut_keys["减x移速"]:
+            gs.move_speed = (x - step, y)
+            print(f"移速: -x {gs.move_speed}")
+        elif key.char == shortcut_keys["加y移速"]:
+            gs.move_speed = (x, y + step)
+            print(f"移速: +y {gs.move_speed}")
+        elif key.char == shortcut_keys["减y移速"]:
+            gs.move_speed = (x, y - step)
+            print(f"移速: -y {gs.move_speed}")
+
     except AttributeError:
         pass
 
 
 def predict_game():
     global game_img, game_img2
-
-    if not yolo_model:
-        print("没有TOLO模型")
-        return
 
     title = config["调试窗口"]["标题"]
     if title:
@@ -2173,13 +2186,24 @@ def predict_game():
 
 def bootstrap():
     global yolo_model, config, gs, testPlayerMoveSpeed
-    _, args = getopt.getopt(sys.argv[1:], "ho:", ["help", "output="])
+    opts, args = getopt.getopt(sys.argv[1:], "tmho:r:s:", ["help", "output="])
 
     if len(args) == 0:
         print("缺少配置文件")
         return
 
     config = load_json5(args[0])
+
+    for o, a in opts:
+        if o == "-r":
+            config["刷图模式"]["使用角色"] = int(a)
+        if o == "-s":
+            config["刷图模式"]["场景"] = a
+        if o == "-m":
+            config["模式"] = a
+        if o == "-t":
+            config["调试窗口"]["标题"] = a
+
     # 初始化技能表
     if type(config["技能表"]) is str:
         config["技能表"] = load_json5(config["技能表"])
