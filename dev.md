@@ -283,7 +283,7 @@ pip install pyinstaller
 单个exe，运行速度慢
 pyinstaller -F main.py
 
-pyinstaller main.py
+pyinstaller main.py -y
 pyinstaller --upx-dir D:\apps\upx-4.2.4-win64 main.py
 
 执行打包的exe出现错误

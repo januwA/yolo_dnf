@@ -1,19 +1,11 @@
 config = {
   剑魂: [
     { key: 's', ct: 8 },
-    { key: 'w', ct: 26, charge: 1 },
-    // { key: 'g', ct: 19, },
-    // { key: 'e', ct: 11, mk: 1, name: '猛龙' },
-    // { key: 'h', ct: 24, name: '幻影剑舞' },
     { key: 'q', ct: 5, mk: ["z"], name: '流星升' },
     { key: 'q', ct: 5, mk: ["c", "x"], name: '流星越' },
-    { key: 'q', ct: 5, mk: ["x"], name: '流星刺' },
-    // { key: "下上右z", ct: 26, name: "瞬斩" },
-    // { key: '下右右z', ct: 19, name: "流星落" },
-    // { key: '上下右右z', ct: 32, name: "无形斩" },
+    { key: 'w', ct: 26, charge: 1 },
     { key: 'y', ct: 228, name: "3觉", boss: true },
     { key: '右右空', ct: 100000, name: "破极兵刃", buff: true },
-    { key: '下上空', ct: 27, name: "自动格挡", buff: true },
   ],
   狂战: [
     { key: 'd', ct: 2.5 },
@@ -55,33 +47,33 @@ config = {
   ],
   魔道: [
     { key: 'a', ct: 4, name: '改良魔法新弹' },
-    { key: 's', ct: 11, mk: 1 },
-    { key: 'd', ct: 4 },
-    { key: 'f', ct: 18 },
+    { key: 's', ct: 10.5 },
+    { key: 'd', ct: 3.7 },
 
     { key: 'q', ct: 13 },
-    { key: 'w', ct: 16 },
 
     { key: 'y', ct: 290, boss: true, charge: 5 },
-    { key: 't', ct: 180, boss: true },
+    // { key: 't', ct: 180, boss: true },
     { key: 'h', ct: 33, boss: true },
     { key: 'e', ct: 27, boss: true },
     { key: 'r', ct: 40, boss: true },
     { key: '上上空', ct: 10000, buff: true },
     { key: '空', ct: 40, buff: true },
-  ],
+   ],
   战法: [
-    { key: 'a', ct: 6 },
-    { key: 's', ct: 21 },
-    { key: 'd', ct: 12, charge: 1 },
-    { key: 'f', ct: 17, charge: 1 },
-
-    { key: 'q', ct: 13, mk: ['z'] },
-    { key: 'e', ct: 28 },
-    { key: 'w', ct: 26 },
+    { key: 'a', ct: 5.2 },
+    { key: 's', ct: 5.2 },
+    { key: 'd', ct: 5.2 },
+    { key: 'q', ct: 11 },
 
     { key: 'y', ct: 252, boss: true, charge: 7 },
     { key: 't', ct: 156, boss: true, charge: 3 },
     { key: '右右空', ct: 10000, buff: true },
+  ],
+  街霸: [
+    { key: 'y', ct: 252, boss: true, charge: 7 },
+    { key: 't', ct: 156, boss: true, charge: 3 },
+    { key: '右右空', ct: 10000, buff: true },
+    { key: '上上空', ct: 10000, buff: true },
   ]
 }
