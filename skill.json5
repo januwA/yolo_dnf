@@ -71,9 +71,17 @@ config = {
     { key: '右右空', ct: 10000, buff: true },
   ],
   街霸: [
-    { key: 'y', ct: 252, boss: true, charge: 7 },
-    { key: 't', ct: 156, boss: true, charge: 3 },
+    { key: 'q', ct: 7.2  },
+    { key: 'a', ct: 4  },
+    { key: 's', ct: 4  },
+    { key: 'w', ct: 9.8,  },
+
+    { key: 'y', ct: 290, boss: true, charge: 7 },
+    { key: 'h', ct: 28, boss: true, charge: 1 },
+    { key: 'r', ct: 40, boss: true, charge: 1 },
+
     { key: '右右空', ct: 10000, buff: true },
     { key: '上上空', ct: 10000, buff: true },
+    { key: '下下上z', ct: 10000, buff: true },
   ]
 }

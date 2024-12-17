@@ -53,7 +53,7 @@ def is_intersect(line, rect):
 
 
 if __name__ == "__main__":
-    line = [(0, 0), (100, 0)]
+    line = [(0, 0), (50, 0)]
     # rect = [(50, 50), (70, 70)]
-    rect = [1, 1, 70, 70]
-    print(is_intersect(line, rect))  # 输出 True
+    rect = [51, -10, 55, 12]
+    print(is_intersect(line, rect))

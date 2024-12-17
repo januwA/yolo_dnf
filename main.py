@@ -743,11 +743,12 @@ def is_intersect(line, rect):
     return False
 
 
-def line_has_door(p1, p2, door_list):
+def line_in_door(p1, p2, door_list):
     if door_list:
         line = [p1, p2]
         for door in door_list:
-            if is_intersect(line, door):
+            res = is_intersect(line, door)
+            if res:
                 return True
 
     return False
@@ -1158,7 +1159,7 @@ def key_down_many(keys: list[str] | str, run=False, seconds=0.1):
 before_random_pos = None
 
 
-def random_move(logname, run=False):
+def random_move(logname, run=False, seconds=0.2):
     global before_random_pos
 
     zh_keys = None
@@ -1171,7 +1172,7 @@ def random_move(logname, run=False):
     before_random_pos = zh_keys
     print(f"随机游走({zh_keys}): {logname}")
     key_down_many(zh_keys, run=run)
-    time.sleep(0.3)
+    time.sleep(seconds)
     key_up_many()
 
 
@@ -1646,7 +1647,8 @@ def move_to_target_xy(player_point, target_point, run=False):
         return move_to_target_y(player_point, target_point, run)
 
 
-def find_player(player_list):
+def find_player(box_map):
+    player_list = box_map.get(config["label"]["wanjia"])
     if player_list:
         # 获取概率最大的玩家
         player = sorted(player_list, key=lambda x: x[box_param["概率"]])[-1]
@@ -1667,7 +1669,18 @@ def find_player(player_list):
                     key_down(config["刷图模式"]["快捷键"]["普攻"])
                     time.sleep(0.5)
                     key_up_many()
-                    random_move(f"卡住了{s:.2f}", run=True)
+                    door_list = box_map.get(config["label"]["men"])
+                    run = not door_list
+                    if s > 10:
+                        move_to_target(
+                            "卡住了",
+                            player_point,
+                            rect_center(gs.ss_rect),
+                            pad=random.randint(5, 10),
+                            run=run
+                        )
+                    else:
+                        random_move(f"卡住了{s:.2f}", run=run, seconds=0.5)
                 return player
 
         gs.player_point_time = time.time()
@@ -1707,7 +1720,7 @@ def predict_source():
                 font_size=params["font_size"],
             )
         )
-        
+
         # gamestart_select_player(draw=True)
         match_img_click(
             area_temp_gray,
@@ -1763,7 +1776,7 @@ def predict_source():
 
 def auto_game(box_map: dict):
     """处理yolo输出"""
-    player = find_player(box_map.get(config["label"]["wanjia"]))
+    player = find_player(box_map)
 
     if gs.场景 == "游戏开始":
         gamestart_select_player()
@@ -1878,7 +1891,7 @@ def auto_game(box_map: dict):
             return
 
         if not fubenditu_list and gs.player_in_boss_room:
-            print("已通关")
+            # print("已通关")
             return False
 
         if gs.next_room_is_boss() and not gs.player_in_boss_room:
@@ -1955,7 +1968,7 @@ def auto_game(box_map: dict):
                     target_point = get_rect_point(target)
 
                     distance = calculate_distance(player_point, target_point)
-                    params = {"run": distance > gs.gw_info["w"] / 3, "pad": 0}
+                    params = {"run": False, "pad": 0}
 
                     if distance < random.randint(80, 120):
                         # 距离足够小，斜着走也能捡到
@@ -1970,8 +1983,8 @@ def auto_game(box_map: dict):
                         # 移动y
                         tp = patch_point_y(player_point, target_point)
                         # 判断是否有门
-                        y_has_door = line_has_door(player_point, tp, door_list)
-                        if not y_has_door:
+                        y_in_door = line_in_door(player_point, tp, door_list)
+                        if not y_in_door:
                             move_to_target(
                                 "材料y", player_point, tp, 1, run=params["run"]
                             )
@@ -1983,8 +1996,8 @@ def auto_game(box_map: dict):
 
                         # 移动x
                         tp = patch_point_x(player_point, target_point)
-                        x_has_door = line_has_door(player_point, tp, door_list)
-                        if not x_has_door:
+                        x_in_door = line_in_door(player_point, tp, door_list)
+                        if not x_in_door:
                             move_to_target(
                                 "材料x", player_point, tp, 1, run=params["run"]
                             )
@@ -1995,7 +2008,7 @@ def auto_game(box_map: dict):
                             )
 
                         # 两边都有门
-                        if y_has_door and x_has_door:
+                        if y_in_door and x_in_door:
                             move_to_target(
                                 "材料2",
                                 player_point,
@@ -2223,7 +2236,7 @@ def predict_game():
                     time.sleep(config["刷图模式"]["延迟"]["截图"])
 
             if mode == "测试移速":
-                player = find_player(box_map.get(config["label"]["wanjia"]))
+                player = find_player(box_map)
                 if player:
                     testPlayerMoveSpeed.test(player)
 
