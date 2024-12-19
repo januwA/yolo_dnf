@@ -370,7 +370,7 @@ class Skill(object):
         if not self.press_key(right):
             return False
 
-        if self.key and self.mk:
+        if self.mk:
             time.sleep(0.1)
             for k in self.mk:
                 key_press(k)
@@ -656,6 +656,10 @@ boss_feature_temp_gray = None
 close_button_temp = None
 close_button_temp_gray = None
 
+# 是否继续文字
+is_continue_temp = None
+is_continue_temp_gray = None
+
 user32 = ctypes.windll.user32
 skill_bar = SkillBar()
 
@@ -768,7 +772,7 @@ def load_img_and_gray(path: str, code=cv2.COLOR_BGR2GRAY):
 
 
 def load_image_temps():
-    global area_temp, area_temp_gray, fb_temp, fb_temp_gray, select_role_temp, select_role_temp_gray, boss_feature_temp, boss_feature_temp_gray, boss_icon_temp, player_icon_temp, close_button_temp, close_button_temp_gray
+    global area_temp, area_temp_gray, fb_temp, fb_temp_gray, select_role_temp, select_role_temp_gray, boss_feature_temp, boss_feature_temp_gray, boss_icon_temp, player_icon_temp, close_button_temp, close_button_temp_gray, is_continue_temp, is_continue_temp_gray
 
     area_temp, area_temp_gray = load_img_and_gray(
         os.path.join(config["资源目录"], "地区传送.jpg")
@@ -784,6 +788,9 @@ def load_image_temps():
     )
     close_button_temp, close_button_temp_gray = load_img_and_gray(
         os.path.join(config["资源目录"], "关闭.jpg")
+    )
+    is_continue_temp, is_continue_temp_gray = load_img_and_gray(
+        os.path.join(config["资源目录"], "是否继续.jpg")
     )
     boss_icon_temp, _ = load_img_and_gray(
         os.path.join(config["资源目录"], "领主图标.jpg"), code=None
@@ -1585,16 +1592,18 @@ def move_to_target(logname: str, player, target, pad, run=False):
 
     keys = degrees2PosZh(degrees)
 
-    # print(keys)
-
     if keys:
-        s_t = (distance - pad) / gs.move_speed
-        if run:
-            s_t /= 2
-
-        key_down_many(keys, run=run)
-        time.sleep(s_t)
-        key_up_many()
+        if gs.move_speed > 0:
+            s_t = (distance - pad) / (gs.move_speed * config["刷图模式"]["移速倍数"])
+            if run:
+                s_t /= 2
+            key_down_many(keys, run=run)
+            time.sleep(s_t)
+            key_up_many()
+        else:
+            key_down_many(keys, run=run)
+            time.sleep(random.uniform(0.1, 0.3))
+            key_up_many()
 
     return False
 
@@ -1677,7 +1686,7 @@ def find_player(box_map):
                             player_point,
                             rect_center(gs.ss_rect),
                             pad=random.randint(5, 10),
-                            run=run
+                            run=run,
                         )
                     else:
                         random_move(f"卡住了{s:.2f}", run=run, seconds=0.5)
@@ -1746,6 +1755,12 @@ def predict_source():
             click=False,
             draw=True,
         )
+        match_img_click(
+            is_continue_temp_gray,
+            config["程序变量"]["置信度"]["是否继续"],
+            click=False,
+            draw=True,
+        )
 
         player_list = box_map.get(config["label"]["wanjia"])
         player = None
@@ -1779,6 +1794,9 @@ def auto_game(box_map: dict):
     player = find_player(box_map)
 
     if gs.场景 == "游戏开始":
+        if match_img_click(close_button_temp_gray, 0.9):
+            print("找到 关闭按钮")
+
         gamestart_select_player()
         time.sleep(3)
         gs.场景 = "赛利亚"
@@ -1852,11 +1870,11 @@ def auto_game(box_map: dict):
         door_list = box_map.get(config["label"]["men"])
         fubenditu_list = box_map.get(config["label"]["fubenditu"])
 
+        快捷键 = config["刷图模式"]["快捷键"]
+        延迟 = config["刷图模式"]["延迟"]
         if box_map.get(config["label"]["jaingli"]):
             # 领取奖励，捡材料，修装备，再次挑战，一气呵成
             key_up_many()
-            快捷键 = config["刷图模式"]["快捷键"]
-            延迟 = config["刷图模式"]["延迟"]
 
             print("领取奖励")
             time.sleep(random.uniform(0.5, 1.0))
@@ -1871,6 +1889,15 @@ def auto_game(box_map: dict):
                 time.sleep(0.5)
                 key_press(快捷键["确认"])
                 time.sleep(0.5)
+            return
+
+        if match_img_click(
+            is_continue_temp_gray,
+            config["程序变量"]["置信度"]["是否继续"],
+            click=False,
+            draw=False,
+        ):
+            key_up_many()
 
             print("移动物品")
             key_press(快捷键["移动物品"])
@@ -1923,10 +1950,8 @@ def auto_game(box_map: dict):
                     player_point = get_rect_point(player)
                     target_point = get_rect_point(target)
                     distance = calculate_distance(player_point, target_point)
-                    params = {"pad": 50, "run": distance > gs.gw_info["w"] / 3}
+                    params = {"pad": gs.释放距离, "run": distance > gs.gw_info["w"] / 3}
 
-                    ok = False
-                    # if distance > gs.释放距离:
                     if gs.释放距离 > 0:
                         # 站在目标的x轴上放技能
                         tx, ty = target_point
@@ -1941,14 +1966,15 @@ def auto_game(box_map: dict):
                     player_point = move_to_target_x(
                         "敌人x", player_point, target_point, run=params["run"]
                     )
-                    # ok = move_to_target(
-                    #     player_point,
-                    #     target_point,
-                    #     params["pad"],
-                    #     run=params["run"],
-                    # )
-                    player_attack(player_point, target)
-                    if config["刷图模式"]["延迟"]["攻击后"] > 0:
+                    if move_to_target(
+                        "敌人",
+                        player_point,
+                        target_point,
+                        params["pad"],
+                        run=params["run"],
+                    ):
+                        key_up_many()
+                        player_attack(player_point, target)
                         key_down(config["刷图模式"]["快捷键"]["普攻"])
                         time.sleep(config["刷图模式"]["延迟"]["攻击后"])
                         key_up_many()
@@ -1973,7 +1999,7 @@ def auto_game(box_map: dict):
                     if distance < random.randint(80, 120):
                         # 距离足够小，斜着走也能捡到
                         move_to_target(
-                            "材料1",
+                            "材料",
                             player_point,
                             target_point,
                             params["pad"],
@@ -1986,7 +2012,11 @@ def auto_game(box_map: dict):
                         y_in_door = line_in_door(player_point, tp, door_list)
                         if not y_in_door:
                             move_to_target(
-                                "材料y", player_point, tp, 1, run=params["run"]
+                                "材料y",
+                                player_point,
+                                tp,
+                                1,
+                                run=params["run"],
                             )
                             player_point = tp
                         else:
@@ -1999,7 +2029,11 @@ def auto_game(box_map: dict):
                         x_in_door = line_in_door(player_point, tp, door_list)
                         if not x_in_door:
                             move_to_target(
-                                "材料x", player_point, tp, 1, run=params["run"]
+                                "材料x",
+                                player_point,
+                                tp,
+                                1,
+                                run=params["run"],
                             )
                             player_point = tp
                         else:
@@ -2086,11 +2120,13 @@ def auto_game(box_map: dict):
                 skill_bar.release_attack(
                     count=1, boss=False, right=bool(random.getrandbits(1))
                 )
-
-            random_move("没有玩家")
+            else:
+                random_move("没有玩家", seconds=0.1)
 
     elif gs.场景 == "切换角色":
         print("切换角色")
+        if match_img_click(close_button_temp_gray, 0.9):
+            print("找到 关闭按钮")
 
         # 找到选择角色，然后按下去
         if match_img_click(

@@ -59,7 +59,7 @@ config = {
     { key: 'r', ct: 40, boss: true },
     { key: '上上空', ct: 10000, buff: true },
     { key: '空', ct: 40, buff: true },
-   ],
+  ],
   战法: [
     { key: 'a', ct: 5.2 },
     { key: 's', ct: 5.2 },
@@ -71,17 +71,27 @@ config = {
     { key: '右右空', ct: 10000, buff: true },
   ],
   街霸: [
-    { key: 'q', ct: 7.2  },
-    { key: 'a', ct: 4  },
-    { key: 's', ct: 4  },
-    { key: 'w', ct: 9.8,  },
+    { key: 'q', ct: 7.2 },
+    { key: 'a', ct: 4 },
+    { key: 's', ct: 4 },
+    { key: 'w', ct: 9.8, },
 
     { key: 'y', ct: 290, boss: true, charge: 7 },
     { key: 'h', ct: 28, boss: true, charge: 1 },
     { key: 'r', ct: 40, boss: true, charge: 1 },
 
     { key: '右右空', ct: 10000, buff: true },
-    { key: '上上空', ct: 10000, buff: true },
     { key: '下下上z', ct: 10000, buff: true },
+  ],
+  驭剑士: [
+    { key: 'a', ct: 10.5, charge: 1 },
+    { key: 's', ct: 8.8, charge: 1 },
+
+    { key: 'y', ct: 305, boss: true, charge: 5 },
+    // { key: 'h', ct: 29, boss: true, charge: 1 },
+    // { key: 'r', ct: 42, boss: true, charge: 1 },
+
+    { key: '右右空', ct: 10000, buff: true },
+    { key: '上上空', ct: 10000, buff: true, mk: ['up'] },
   ]
 }
