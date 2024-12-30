@@ -73,6 +73,15 @@
     "xhash": "cpp",
     "xtree": "cpp",
     "deque": "cpp",
-    "stack": "cpp"
+    "stack": "cpp",
+    "complex": "cpp",
+    "mutex": "cpp",
+    "queue": "cpp",
+    "set": "cpp",
+    "stop_token": "cpp",
+    "thread": "cpp",
+    "codecvt": "cpp",
+    "regex": "cpp",
+    "random": "cpp"
   }
 }
