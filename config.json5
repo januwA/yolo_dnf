@@ -1,5 +1,5 @@
 config = {
-  资源目录: "C:\\Users\\16418\\Desktop\\风暴幽城\\配置",
+  资源目录: "C:\\Users\\16418\\Desktop\\FenBaoYouChen\\Config",
   模式: "刷图模式",
   调试窗口: {
     标题: "",
@@ -78,9 +78,9 @@ config = {
     player_tolerance: 30,
   },
   标记模式: {
-    输出目录: "C:\\Users\\16418\\Desktop\\风暴幽城\\segment_merge4_1",
+    输出目录: "C:\\Users\\16418\\Desktop\\FenBaoYouChen\\auto_mark1",
     seconds: 1,
-    begin: 432,
+    begin: 1,
   },
   测试移速: {
     方向: '下',

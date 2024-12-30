@@ -38,7 +38,7 @@ def find_template(img, template, threshold=0.25):
 
 
 if __name__ == "__main__":
-    # image_path = r"C:\Users\16418\Desktop\风暴幽城\segment\1_00000109.jpg"
+    # image_path = r"C:\Users\16418\Desktop\FenBaoYouChen\segment\1_00000109.jpg"
     image_path = r"C:\Users\16418\Desktop\dnf_py\1_5.png"
     img = cv2.imdecode(np.fromfile(image_path, dtype=np.uint8), -1)
     img = cv2.resize(img, (40, 40))

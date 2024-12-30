@@ -18,7 +18,7 @@ label = {
     "xuanzeditu": "选择地图",
 }
 
-out_dir = r"C:\Users\16418\Desktop\风暴幽城\segment_merge4"
+out_dir = r"C:\Users\16418\Desktop\FenBaoYouChen\segment_merge4"
 save_i = 1
 
 
@@ -186,25 +186,25 @@ def merge_image_to_mapimage():
     map_image_list = [
         {
             "images": glob.glob(
-                os.path.join(r"C:\Users\16418\Desktop\风暴幽城\截图\魔道", "*.jpg")
+                os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\截图\魔道", "*.jpg")
             ),
             "smap_rect": None,
         },
         {
             "images": glob.glob(
-                os.path.join(r"C:\Users\16418\Desktop\风暴幽城\截图\元素", "*.jpg")
+                os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\截图\元素", "*.jpg")
             ),
             "smap_rect": None,
         },
         {
             "images": glob.glob(
-                os.path.join(r"C:\Users\16418\Desktop\风暴幽城\截图\枪炮", "*.jpg")
+                os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\截图\枪炮", "*.jpg")
             ),
             "smap_rect": None,
         },
         {
             "images": glob.glob(
-                os.path.join(r"C:\Users\16418\Desktop\风暴幽城\截图\枪炮2", "*.jpg")
+                os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\截图\枪炮2", "*.jpg")
             ),
             "smap_rect": None,
         },
@@ -251,7 +251,7 @@ def merge_image_to_mapimage():
         # 所有敌人素材
         {
             "images": glob.glob(
-                os.path.join(r"C:\Users\16418\Desktop\风暴幽城\敌人", "*/*/*.png")
+                os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\敌人", "*/*/*.png")
             ),
             "label": label["diren"],
             "step": 3,
@@ -263,7 +263,7 @@ def merge_image_to_mapimage():
         # 所有门素材
         # {
         #     "images": glob.glob(
-        #         os.path.join(r"C:\Users\16418\Desktop\风暴幽城\门", "*.png")
+        #         os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\门", "*.png")
         #     ),
         #     "label": label["men"],
         #     "step": 2,
@@ -275,7 +275,7 @@ def merge_image_to_mapimage():
         # 所有奖励素材
         {
             "images": glob.glob(
-                os.path.join(r"C:\Users\16418\Desktop\风暴幽城\奖励", "*.png")
+                os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\奖励", "*.png")
             ),
             "label": label["jaingli"],
             "step": 1,

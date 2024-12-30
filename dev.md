@@ -4,7 +4,7 @@
 ```sh
 ffmpeg -i "1.mp4" -r 1/3 -ss 00:00:00 -vf scale=1280:720 -q:v 7 -f image2 "segment\1_%8d.jpg"
 
-ffmpeg -i "C:\Users\16418\Desktop\风暴幽城\剑魂 风暴幽城 普通 2024-12-02.mp4" -r 1 -ss 00:00:00 -vf scale=1280:720 -q:v 7 -f image2 "C:\Users\16418\Desktop\风暴幽城\segment\1_%8d.jpg"
+ffmpeg -i "C:\Users\16418\Desktop\FenBaoYouChen\剑魂 FenBaoYouChen 普通 2024-12-02.mp4" -r 1 -ss 00:00:00 -vf scale=1280:720 -q:v 7 -f image2 "C:\Users\16418\Desktop\FenBaoYouChen\segment\1_%8d.jpg"
 ```
 
 - -r 1 输出帧速率，每5秒提取一帧 -r 1/5
@@ -66,9 +66,9 @@ print(torch.cuda.is_available())  # 输出True表示GPU可用
 ```sh
 yolo task=detect mode=train model=yolov8n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\trains\train6\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_merge_player_enemy\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\test-trains"
+yolo task=detect mode=train model="C:\Users\16418\Desktop\FenBaoYouChen\trains\train6\weights\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\segment_merge_player_enemy\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\test-trains"
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\test-trains\train3\weights\best.pt" data="C:\Users\16418\Desktop\风暴幽城\segment_merge4_1\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\风暴幽城\test-trains"
+yolo task=detect mode=train model="C:\Users\16418\Desktop\FenBaoYouChen\test-trains\train3\weights\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\segment_merge4_1\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\test-trains"
 ```
 
 - task=detect: 指定任务为目标检测
@@ -85,6 +85,20 @@ yolo task=detect mode=train model="C:\Users\16418\Desktop\风暴幽城\test-trai
 - device=0 指定使用哪个GPU进行检测
 - project=目录  指定了输出根目录
 
+
+## 转换模型格式
+
+https://docs.ultralytics.com/zh/modes/export/#usage-examples
+
+```sh
+pip install onnx
+
+yolo export model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" format=onnx
+
+yolo task=detect mode=predict model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" source="C:\Users\16418\Videos\屏幕录制\屏幕录制 2024-12-08 201248.mp4" device=0
+```
+
+- 结果在`C:\Users\16418\Desktop\FenBaoYouChen\Config\best.onnx`
 
 ## 测试模型
 
