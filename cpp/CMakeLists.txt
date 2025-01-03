@@ -1,10 +1,14 @@
-cmake_minimum_required(VERSION 3.0...3.5)
-project(q VERSION 0.1.0)
-set(CMAKE_CXX_STANDARD 20)
+cmake_minimum_required(VERSION 3.5)
+# set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508") 
+
+project(q VERSION 0.1.0 LANGUAGES CXX)
+# set(CMAKE_CXX_MODULE_STD 1) # this is important
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8") 
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /std:c++latest")
+  message(STATUS ${CMAKE_CXX_FLAGS})
 endif()
 
 set(OpenCV_DIR "D:\\apps\\opencv\\build\\x64\\vc16\\lib")
@@ -15,7 +19,11 @@ find_package(OpenCV REQUIRED)
 # set(jsoncpp_DIR "D:\\apps\\jsoncpp-1.9.6\\build")
 # find_package(jsoncpp REQUIRED)
 
-add_executable(q json.hpp main.cpp)
+add_executable(q json.hpp dnf.cpp main.cpp)
+
+# Must be C++23 until CMake merges `import std` as a C++20 extension
+# target_compile_features("${PROJECT_NAME}" PRIVATE cxx_std_23) 
+
 # target_include_directories("${PROJECT_NAME}" PUBLIC "D:\\apps\\jsoncpp-1.9.6\\include")
 # target_link_libraries("${PROJECT_NAME}" PUBLIC "D:\\apps\\jsoncpp-1.9.6\\build\\lib\\Release\\jsoncpp.lib")
 # target_include_directories(${PROJECT_NAME} PUBLIC "D:\\apps\\json-3.11.3\\single_include")

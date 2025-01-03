@@ -527,10 +527,8 @@ class GameStatus(object):
         self.room_road_block: dict[tuple, list[tuple]] = copy.deepcopy(
             self._room_road_block
         )
-        self.boss_room_point_list = []  # 有可能有多个boss图标
         self.boss_room_point = None  # 最后boss
         self.player_room_point = None  # 玩家在小地图上的位置
-        self.player_room_point_before = None  # 上一个房间的位置
 
         self.player_point = None
         self.player_point_before = None
@@ -538,8 +536,6 @@ class GameStatus(object):
         self.player_in_boss_room = False
         self.next_room_time = 0  # 过去了多少秒
         self.is_move_to_next_room = False
-
-        # 再次挑战
         self.challenge_again = False
         self.default_move_room = False
 
@@ -595,7 +591,6 @@ class GameStatus(object):
         # 这些都应该是必须初始化的
         self.room_path = None
         self.room_i = 0
-        self.boss_room_point_list.clear()
         self.boss_room_point: tuple[int, int] = None
         self.player_room_point: tuple[int, int] = None
         self.player_point: tuple[int, int] = None
@@ -817,7 +812,7 @@ def change_player():
             mk=obj.get("mk", None),
             buff=obj.get("buff", False),
             boss=obj.get("boss", False),
-            charge=obj.get("charge", 0),
+            charge=obj.get("dt", 0),
             name=obj.get("name", ""),
         )
         skill_bar.add(sk)
@@ -1183,7 +1178,7 @@ def random_move(logname, run=False, seconds=0.2):
     key_up_many()
 
 
-def window_capture(hwnd, toCv2=False, usePIL=False):
+def window_capture(hwnd, usePIL=False):
     hwndDC = win32gui.GetWindowDC(hwnd)
 
     # 获取窗口的设备上下文DC
@@ -1240,9 +1235,7 @@ def window_capture(hwnd, toCv2=False, usePIL=False):
     saveDC.DeleteDC()
     mfcDC.DeleteDC()
     win32gui.ReleaseDC(hwnd, hwndDC)
-    if toCv2:
-        return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    return img
+    return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
 
 def player_attack(player, target, x=False):
@@ -2243,7 +2236,7 @@ def predict_game():
                 time.sleep(1)
                 continue
             game_img = window_capture(
-                gs.hwnd, toCv2=True, usePIL=config["程序变量"]["usePIL"]
+                gs.hwnd, usePIL=config["程序变量"]["usePIL"]
             )
 
             # 裁剪掉多余的图像，主要在修炼馆测试

@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "*.json5": "javascript",
+    "cmake.outputLogEncoding": "utf-8",
     "concepts": "cpp",
     "array": "cpp",
     "atomic": "cpp",
@@ -82,6 +83,18 @@
     "thread": "cpp",
     "codecvt": "cpp",
     "regex": "cpp",
-    "random": "cpp"
-  }
+    "random": "cpp",
+    "print": "cpp"
+  },
+  "C_Cpp.inlayHints.autoDeclarationTypes.enabled": false,
+  "C_Cpp.inlayHints.autoDeclarationTypes.showOnLeft": false,
+  "C_Cpp.inlayHints.parameterNames.enabled": false,
+  "C_Cpp.inlayHints.referenceOperator.enabled": false,
+  "C_Cpp.errorSquiggles": "enabled",
+  "C_Cpp.clang_format_fallbackStyle": "Google",
+  "cmake.debugConfig": {
+    "args": [
+      "C:\\Users\\16418\\Desktop\\dnf_py\\config.json5"
+    ]
+  },
 }
