@@ -42,7 +42,7 @@ constexpr auto PRESS_SECONDS = 0.05;
 
 using namespace std;
 using json = nlohmann::json;
-using predict_result_t = vector<tuple<int, int, int, int, float, int>>;
+using predict_result_t = tuple<int, int, int, int, float, int>;
 using tuple_xy = tuple<int, int>;
 
 wstring strToWstr(string_view str);
@@ -429,10 +429,10 @@ static cv::Mat imread2(wstring p);
  *
  * size: yolo 训练时imgsz参数
  */
-static predict_result_t predict(cv::Mat &original_image, double conf = 0.8,
+static vector<predict_result_t> predict(cv::Mat &original_image, double conf = 0.8,
                                 cv::Size size = cv::Size(640, 640));
 
-void spot(cv::Mat &original_image, predict_result_t &detections);
+void spot(cv::Mat &original_image, vector<predict_result_t> &detections);
 
 void init_vkmap();
 // https://learn.microsoft.com/zh-cn/windows/win32/gdi/capturing-an-image

@@ -94,8 +94,7 @@ map<wstring, int> vk_map{
 map<wstring, int> vsc_map;
 
 cv::dnn::Net model;
-vector<wstring> CLASSES{L"玩家", L"fubenditu", L"cailiao",
-                        L"men",  L"diren",     L"jiangli"};
+vector<wstring> CLASSES{L"玩家", L"副本地图", L"材料", L"门", L"敌人", L"奖励"};
 ;
 std::vector<cv::Scalar> colors;
 
@@ -246,8 +245,8 @@ done:
 
 void predict_game() {
   auto title = "1";
-  cv::namedWindow(title, cv::WINDOW_NORMAL);
-  cv::resizeWindow(title, 800, 600);
+  // cv::namedWindow(title, cv::WINDOW_NORMAL);
+  // cv::resizeWindow(title, 800, 600);
 
   while (true) {
     if (GetAsyncKeyState(vk_map[L"delete"]) & KS_NOW_DOWN) break;
@@ -259,13 +258,19 @@ void predict_game() {
     }
 
     auto detections = predict(game_img, 0.8);
-    spot(game_img, detections);
+    map<wstring, vector<predict_result_t>> box_map;
+    for (auto &el : detections) {
+      auto name = CLASSES[get<5>(el)];
+      box_map[name].push_back(el);
+    }
+    // println("{}", box_map.size());
 
-    imshow(title, game_img);
-    cv::setWindowProperty(title, cv::WND_PROP_TOPMOST, 1);
-    cv::waitKey(1);
+    // spot(game_img, detections);
+    // imshow(title, game_img);
+    // cv::setWindowProperty(title, cv::WND_PROP_TOPMOST, 1);
+    // cv::waitKey(1);
 
-    sleep(0.01f);
+    sleep(0.01);
   }
 
   cv::destroyAllWindows();
@@ -282,11 +287,6 @@ int bootstrap(int argc, char *argv[]) {
   gs.init(strToWstr(argv[1]));
   gs.load_image_temps();
   gs.change_player();
-
-  sleep(3);
-  skill_bar.release_buff_all();
-
-  return 0;
 
   auto model_path = gs.src_dir / "best.onnx";
   model = cv::dnn::readNetFromONNX(model_path.string());
@@ -341,7 +341,7 @@ void init_vkmap() {
   }
 }
 
-void spot(cv::Mat &original_image, predict_result_t &detections) {
+void spot(cv::Mat &original_image, vector<predict_result_t> &detections) {
   for (auto &e : detections) {
     auto &[x1, y1, x2, y2, conf, id] = e;
     // log2(x1, y1, x2, y2, conf, id, CLASSES[id], id);
@@ -494,8 +494,8 @@ static cv::Mat imread2(wstring p) {
   }
 }
 
-static predict_result_t predict(cv::Mat &original_image, double conf,
-                                cv::Size size) {
+static vector<predict_result_t> predict(cv::Mat &original_image, double conf,
+                                        cv::Size size) {
   auto width = original_image.cols;
   auto height = original_image.rows;
   // auto length = max(height, width);
