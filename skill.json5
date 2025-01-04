@@ -4,14 +4,14 @@ config = {
     { key: 'q', ct: 5, mk: ["z"], name: '流星升' },
     { key: 'q', ct: 5, mk: ["c", "x"], name: '流星越' },
     { key: 'w', ct: 26, dt: 1 },
-    { key: 'y', ct: 228, name: "3觉", boss: true },
+    { key: 'y', ct: 228, name: "3觉", boss: true, ut: 5, },
     { key: '右右空', ct: 100000, name: "破极兵刃", buff: true },
   ],
   狂战: [
     { key: 'd', ct: 2.5 },
     { key: 'f', ct: 8 },
 
-    { key: 'y', ct: 291, boss: true },
+    { key: 'y', ct: 291, boss: true, ut: 5, },
     { key: '右右空', ct: 100000, buff: true }
   ],
   枪炮: [
@@ -22,7 +22,7 @@ config = {
     { key: 'w', ct: 10, dt: 2 },
     { key: 'e', ct: 10, dt: 2 },
 
-    { key: 'y', ct: 305, boss: true },
+    { key: 'y', ct: 305, boss: true, ut: 5, },
     { key: '右右空', ct: 100000, buff: true }
   ],
   鬼泣: [
@@ -31,7 +31,7 @@ config = {
     { key: 's', ct: 8 },
     { key: 'd', ct: 4 },
 
-    { key: 'y', ct: 276, boss: true },
+    { key: 'y', ct: 276, boss: true, ut: 5, },
     { key: '上下空', ct: 10000, buff: true },
     { key: '空', ct: 40, buff: true },
   ],
@@ -41,18 +41,18 @@ config = {
     { key: 'q', ct: 30 },
     { key: 'e', ct: 13 },
 
-    { key: 'y', ct: 290, boss: true },
+    { key: 'y', ct: 290, boss: true, ut: 5, },
     { key: '上下空', ct: 10000, buff: true },
     { key: '空', ct: 40, buff: true },
   ],
   魔道: [
     { key: 'a', ct: 4, name: '改良魔法新弹' },
-    { key: 's', ct: 10.5 },
+    { key: 's', ct: 10.5, ut:1, mk: 1 },
     { key: 'd', ct: 3.7 },
 
     { key: 'q', ct: 13 },
 
-    { key: 'y', ct: 290, boss: true, dt: 5 },
+    { key: 'y', ct: 290, boss: true, ut: 5, },
     // { key: 't', ct: 180, boss: true },
     { key: 'h', ct: 33, boss: true },
     { key: 'e', ct: 27, boss: true },
@@ -66,8 +66,8 @@ config = {
     { key: 'd', ct: 5.2 },
     { key: 'q', ct: 11 },
 
-    { key: 'y', ct: 252, boss: true, dt: 7 },
-    { key: 't', ct: 156, boss: true, dt: 3 },
+    { key: 'y', ct: 252, boss: true, ut: 7 },
+    { key: 't', ct: 156, boss: true, ut: 3 },
     { key: '右右空', ct: 10000, buff: true },
   ],
   街霸: [
@@ -76,9 +76,9 @@ config = {
     { key: 's', ct: 4 },
     { key: 'w', ct: 9.8, },
 
-    { key: 'y', ct: 290, boss: true, dt: 7 },
-    { key: 'h', ct: 28, boss: true, dt: 1 },
-    { key: 'r', ct: 40, boss: true, dt: 1 },
+    { key: 'y', ct: 290, boss: true, ut: 7 },
+    { key: 'h', ct: 28, boss: true, ut: 1 },
+    { key: 'r', ct: 40, boss: true, ut: 1 },
 
     { key: '右右空', ct: 10000, buff: true },
     { key: '下下上z', ct: 10000, buff: true },
@@ -87,9 +87,9 @@ config = {
     { key: 'a', ct: 10.5, dt: 1 },
     { key: 's', ct: 8.8, dt: 1 },
 
-    { key: 'y', ct: 305, boss: true, dt: 5 },
-    // { key: 'h', ct: 29, boss: true, dt: 1 },
-    // { key: 'r', ct: 42, boss: true, dt: 1 },
+    { key: 'y', ct: 305, boss: true, ut: 5 },
+    // { key: 'h', ct: 29, boss: true, ut: 1 },
+    // { key: 'r', ct: 42, boss: true, ut: 1 },
 
     { key: '右右空', ct: 10000, buff: true },
     { key: '上上空', ct: 10000, buff: true, mk: ['up'] },

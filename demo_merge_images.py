@@ -18,9 +18,9 @@ label = {
     "xuanzeditu": "选择地图",
 }
 
-out_dir = r"C:\Users\16418\Desktop\FenBaoYouChen\segment_merge4"
+out_dir = r"C:\Users\16418\Desktop\FenBaoYouChen\merge1"
 save_i = 1
-
+save_prefix = "mg_"
 
 def jsonpath_from_imagepath(imagepath: str):
     fname = os.path.splitext(os.path.basename(imagepath))[0]
@@ -120,7 +120,7 @@ def merge_images_randomly_with_alpha(map_img_path, smap_rect, lst):
     map_img = Image.open(map_img_path)
     map_img = map_img.convert("RGBA")  # 转换为RGBA模式
 
-    out_img_name = f"{save_i}.png"
+    out_img_name = f"{save_prefix}{save_i}.jpg"
     out_img_filename = os.path.join(out_dir, out_img_name)
     labelme_file_data = None
 
@@ -174,13 +174,14 @@ def merge_images_randomly_with_alpha(map_img_path, smap_rect, lst):
     map_img.save(out_img_filename, "PNG")
 
     # 文件不存在会自动创建
-    with open(os.path.join(out_dir, f"{save_i}.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, f"{save_prefix}{save_i}.json"), "w", encoding="utf-8") as f:
         json.dump(labelme_file_data, f, indent=2)
     save_i += 1
+    print(save_i)
 
 
 def merge_image_to_mapimage():
-    """每张地图背景上生成8个敌人, 然后换下一张背景图, 知道小图贴完"""
+    """每张地图背景上生成8个敌人, 然后换下一张背景图, 直到小图贴完"""
 
     # 地图背景素材 800x600
     map_image_list = [
@@ -204,7 +205,9 @@ def merge_image_to_mapimage():
         },
         {
             "images": glob.glob(
-                os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\截图\枪炮2", "*.jpg")
+                os.path.join(
+                    r"C:\Users\16418\Desktop\FenBaoYouChen\截图\枪炮2", "*.jpg"
+                )
             ),
             "smap_rect": None,
         },
@@ -286,12 +289,12 @@ def merge_image_to_mapimage():
         },
     ]
 
-    # 打乱素材
-    最大素材量 = 2000
+    最大素材量 = -1
     for el in lst:
+        # 打乱素材
         random.shuffle(el["images"])
         print(f"{el['label']} 素材量:{len(el["images"])}")
-        if len(el["images"]) > 最大素材量:
+        if 最大素材量 > 0 and len(el["images"]) > 最大素材量:
             el["images"] = el["images"][:最大素材量]
 
     map_image_list_i = 0

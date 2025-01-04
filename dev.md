@@ -64,11 +64,13 @@ print(torch.cuda.is_available())  # 输出True表示GPU可用
 训练模型的目的是产出best.pt模型
 
 ```sh
-yolo task=detect mode=train model=yolov8n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0
+yolo help
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\FenBaoYouChen\trains\train6\weights\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\segment_merge_player_enemy\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\test-trains"
+yolo train model=yolov8n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\FenBaoYouChen\test-trains\train3\weights\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\segment_merge4_1\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\test-trains"
+yolo train model="C:\Users\16418\Desktop\FenBaoYouChen\trains\train6\weights\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\segment_merge_player_enemy\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\test-trains"
+
+yolo train model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\auto_mark_jianHun\YOLODataset\dataset.yaml" epochs=5 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\test-trains"
 ```
 
 - task=detect: 指定任务为目标检测
@@ -84,6 +86,7 @@ yolo task=detect mode=train model="C:\Users\16418\Desktop\FenBaoYouChen\test-tra
 - imgsz=640: 设置输入图像的尺寸为640x640像素
 - device=0 指定使用哪个GPU进行检测
 - project=目录  指定了输出根目录
+- pretrained
 
 
 ## 转换模型格式
@@ -95,7 +98,7 @@ pip install onnx
 
 yolo export model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" format=onnx
 
-yolo task=detect mode=predict model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" source="C:\Users\16418\Videos\屏幕录制\屏幕录制 2024-12-08 201248.mp4" device=0
+yolo predict model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" source="a.mp4" device=0
 ```
 
 - 结果在`C:\Users\16418\Desktop\FenBaoYouChen\Config\best.onnx`
