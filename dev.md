@@ -68,7 +68,7 @@ yolo help
 
 yolo task=detect mode=train model=yolo11n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\LiuYuPuBu"
 
-yolo task=detect mode=train model="pre_best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\merge1\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\merge1"
+yolo task=detect mode=train model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\data\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project=C:\Users\16418\Desktop\FenBaoYouChen
 ```
 
 - task=detect: 指定任务为目标检测

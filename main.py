@@ -359,7 +359,7 @@ class Skill(object):
             # print(f'释放技能: {self.lkey}')
             lks_len = len(self.lkey) - 1
             for i, k in enumerate(self.lkey):
-                if i == lks_len and self.dt > 0:
+                if i == lks_len and self.dt > 0.1:
                     key_down(k)
                     time.sleep(self.dt)
                     key_up(k)
@@ -536,9 +536,11 @@ class GameStatus(object):
         self.pinfo: dict = {
             "移速": _pinfo.get("移速", 0),
             "技能": _pinfo.get("技能", None),
-            "释放距离": _pinfo.get("释放距离", 0.25),  # 屏幕宽度的百分比
+            "释放距离": _pinfo.get("释放距离", 0.3),  # 屏幕宽度的百分比
             "释放数量": _pinfo.get("释放数量", 1),  # 一次释放多少个技能
-            "副本": _pinfo.get("副本", list(fbs_map.keys())[0]),  # 要刷哪个副本，默认第一个
+            "副本": _pinfo.get(
+                "副本", list(fbs_map.keys())[0]
+            ),  # 要刷哪个副本，默认第一个
             "难度": _pinfo.get("难度", "普通"),
         }
 
@@ -556,7 +558,7 @@ class GameStatus(object):
             self.yolo_model = self.fb_obj["yolo_model"]
         else:
             self.fb_obj["yolo_model"] = YOLO(
-                os.path.join(self.fb_obj["配置"], "best.pt")
+                os.path.join(self.fb_obj["配置"], self.fb_obj.get("ptName", "best.pt"))
             )
             self.yolo_model = self.fb_obj["yolo_model"]
 
@@ -1360,9 +1362,7 @@ def match_smap_room_loc(smap):
     if not gs.player_room_point and not gs.boss_room_point:
         skill_bar.release_buff_all()
 
-    player_point, boss_point = match_img_smap(
-        smap, config["程序变量"]["置信度"]["副本小地图"]
-    )
+    player_point, boss_point = match_img_smap(smap, config["置信度"]["副本小地图"])
 
     # 生成全图grid，只生成一次
     not_smap_grid = gs.smap_grid is None
@@ -1832,19 +1832,19 @@ def predict_source():
         # gamestart_select_player(draw=True)
         match_img_click(
             gs.area_temp_gray,
-            config["程序变量"]["置信度"]["地区传送"],
+            config["置信度"]["地区传送"],
             click=False,
             draw=True,
         )
         match_img_click(
             gs.select_role_temp_gray,
-            config["程序变量"]["置信度"]["选择角色"],
+            config["置信度"]["选择角色"],
             click=False,
             draw=True,
         )
         match_img_click(
             gs.fb_temp_gray,
-            config["程序变量"]["置信度"]["选择副本"],
+            config["置信度"]["选择副本"],
             click=False,
             draw=True,
         )
@@ -1856,7 +1856,7 @@ def predict_source():
         )
         match_img_click(
             gs.is_continue_temp_gray,
-            config["程序变量"]["置信度"]["是否继续"],
+            config["置信度"]["是否继续"],
             click=False,
             draw=True,
         )
@@ -1890,6 +1890,11 @@ def predict_source():
 
 def auto_game(box_map: dict):
     """处理yolo输出"""
+    fuBenDiTu_list = box_map.get(config["label"]["fubenditu"])
+    
+    if fuBenDiTu_list and gs.场景 != "副本中":
+        gs.场景 = "副本中"
+    
     if gs.场景 == "游戏开始":
         if match_img_click(gs.close_button_temp_gray, 0.9):
             print("找到 关闭按钮")
@@ -1911,7 +1916,7 @@ def auto_game(box_map: dict):
             print("找到 关闭按钮")
             key_press(config["快捷键"]["传送阵"])
 
-        if match_img_click(gs.area_temp_gray, config["程序变量"]["置信度"]["地区传送"]):
+        if match_img_click(gs.area_temp_gray, config["置信度"]["地区传送"]):
             print("找到地区")
             time.sleep(2)
 
@@ -1928,7 +1933,7 @@ def auto_game(box_map: dict):
         return False
     elif gs.场景 == "选择副本":
         # 找到副本在哪里
-        if match_img_click(gs.fb_temp_gray, config["程序变量"]["置信度"]["选择副本"]):
+        if match_img_click(gs.fb_temp_gray, config["置信度"]["选择副本"]):
             print("选择副本，重置难度等级")
             key_press_many("左" * 6)
 
@@ -1950,7 +1955,7 @@ def auto_game(box_map: dict):
 
         return False
     elif gs.场景 == "副本中":
-        if gs.challenge_again and not box_map.get(config["label"]["fubenditu"]):
+        if gs.challenge_again and not fuBenDiTu_list:
             # 刷完图，副本地图会消失
             print("没有疲劳了")
 
@@ -1983,7 +1988,6 @@ def auto_game(box_map: dict):
         enemy_list = box_map.get(config["label"]["diren"])
         materials_list = box_map.get(config["label"]["cailiao"])
         door_list = box_map.get(config["label"]["men"])
-        fubenditu_list = box_map.get(config["label"]["fubenditu"])
 
         快捷键 = config["快捷键"]
         延迟 = config["延迟"]
@@ -2008,7 +2012,7 @@ def auto_game(box_map: dict):
 
         if match_img_click(
             gs.is_continue_temp_gray,
-            config["程序变量"]["置信度"]["是否继续"],
+            config["置信度"]["是否继续"],
             click=False,
             draw=False,
         ):
@@ -2032,14 +2036,14 @@ def auto_game(box_map: dict):
             gs.reset_fb_status()
             return False
 
-        if not fubenditu_list and gs.player_in_boss_room:
+        if not fuBenDiTu_list and gs.player_in_boss_room:
             # print("已通关")
             return False
 
         player = find_player(box_map)
 
         if gs.next_room_is_boss() and not gs.player_in_boss_room:
-            match_smap_room_loc(fubenditu_list)
+            match_smap_room_loc(fuBenDiTu_list)
             find_to_boss_room_path()
             find_player_current_room_and_next_room()
 
@@ -2055,7 +2059,7 @@ def auto_game(box_map: dict):
                     and gs.next_room_is_boss()
                     and match_img_click(
                         gs.boss_feature_temp_gray,
-                        config["程序变量"]["置信度"]["领主特征"],
+                        config["置信度"]["领主特征"],
                         click=False,
                     )
                 ):
@@ -2072,8 +2076,7 @@ def auto_game(box_map: dict):
                 # 能攻击的敌人？
                 for target in enemy_list:
                     _, y1, _, y2 = target[:4]
-                    target_point = get_rect_point(target)
-                    tx, ty = target_point
+                    tx, ty = get_rect_point(target)
                     x_pad = np.abs(px - tx)
                     y_pad = np.abs(py - ty)
                     can_attack: bool = x_pad <= params[
@@ -2083,14 +2086,13 @@ def auto_game(box_map: dict):
                     if can_attack:
                         key_up_many()
                         player_attack(player, target)
-                        key_down(config["快捷键"]["普攻"])
-                        time.sleep(config["延迟"]["攻击后"])
-                        key_up_many()
+                        player_attack(None, None, x=True)
                         return False
 
                 # 找到最近的
                 target = find_nearest_target(player, enemy_list, None)
                 if target:
+                    x1, y1, x2, y2 = target[:4]
                     target_point = get_rect_point(target)
                     tx, ty = target_point
 
@@ -2110,12 +2112,25 @@ def auto_game(box_map: dict):
                         )
                         return False
                     else:
-                        player_point = move_to_target_y(
-                            "敌人y", player_point, target_point, run=params["run"]
-                        )
+                        can_not_move_y = True
+                        target_h = y2 - y1
+                        player_h = player[1] - player[3]
+                        if target_h > player_h:
+                            # 对于体型高于玩家的敌人
+                            can_not_move_y = py > (y1 + y2 - player_h) and py < y2
+                        else:
+                            can_not_move_y = py > y1 and py < y2
+
+                        if not can_not_move_y:
+                            player_point = move_to_target_y(
+                                "敌人y", player_point, target_point, run=params["run"]
+                            )
                         player_point = move_to_target_x(
                             "敌人x", player_point, target_point, run=params["run"]
                         )
+                        print("移动后直接放技能")
+                        player_attack(player, target)
+                        player_attack(None, None, x=True)
                 else:
                     print("没找到最近的敌人")
                 return False
@@ -2129,7 +2144,9 @@ def auto_game(box_map: dict):
                     player, materials_list, (gs.gw_info["w"] * gs.pinfo["释放距离"])
                 )
                 if target:
+                    x1, y1, x2, y2 = target[:4]
                     player_point = get_rect_point(player)
+                    px, py = player_point
                     target_point = get_rect_point(target)
 
                     distance = calculate_distance(player_point, target_point)
@@ -2145,23 +2162,30 @@ def auto_game(box_map: dict):
                             run=params["run"],
                         )
                     else:
-                        # 移动y
-                        tp = patch_point_y(player_point, target_point)
-                        # 判断是否有门
-                        y_in_door = line_in_door(player_point, tp, door_list)
-                        if not y_in_door:
-                            move_to_target(
-                                "材料y",
-                                player_point,
-                                tp,
-                                1,
-                                run=params["run"],
-                            )
-                            player_point = tp
-                        else:
-                            print(
-                                f"路线y与门相交 {'下' if target_point[1] > player_point[1] else '上'}"
-                            )
+                        y_in_door = False
+                        x_in_door = False
+                        can_not_move_y = py > (y1 + random.randint(1, 5)) and py < (
+                            y2 - random.randint(1, 5)
+                        )
+
+                        if not can_not_move_y:
+                            # 移动y
+                            tp = patch_point_y(player_point, target_point)
+                            # 判断是否有门
+                            y_in_door = line_in_door(player_point, tp, door_list)
+                            if not y_in_door:
+                                move_to_target(
+                                    "材料y",
+                                    player_point,
+                                    tp,
+                                    1,
+                                    run=params["run"],
+                                )
+                                player_point = tp
+                            else:
+                                print(
+                                    f"路线y与门相交 {'下' if target_point[1] > player_point[1] else '上'}"
+                                )
 
                         # 移动x
                         tp = patch_point_x(player_point, target_point)
@@ -2196,11 +2220,13 @@ def auto_game(box_map: dict):
 
             if door_list:
                 key_up_many()
+                if gs.player_in_boss_room:
+                    gs.room_i -= 1
                 gs.player_in_boss_room = False
                 gs.challenge_again = False
 
                 # 获取小地图切片
-                match_smap_room_loc(fubenditu_list)
+                match_smap_room_loc(fuBenDiTu_list)
                 # 从定位分析出前进路线
                 find_to_boss_room_path()
                 # 当前玩家在路线的哪个位置，以及下个路线的方向
@@ -2210,15 +2236,15 @@ def auto_game(box_map: dict):
 
                 if match_img_click(
                     gs.not_pick_cailiao_temp_gray,
-                    config["程序变量"]["置信度"]["存在未拾取的物品"],
+                    config["置信度"]["存在未拾取的物品"],
                 ):
                     print("存在未拾取的物品")
                     nrf = gs.next_room_info()
                     pos_reverse_run(nrf[0])
 
             else:
-                if fubenditu_list and not gs.next_room_is_boss():
-                    match_smap_room_loc(fubenditu_list)
+                if fuBenDiTu_list and not gs.next_room_is_boss():
+                    match_smap_room_loc(fuBenDiTu_list)
                     find_to_boss_room_path()
                     find_player_current_room_and_next_room()
 
@@ -2272,9 +2298,7 @@ def auto_game(box_map: dict):
             print("找到 关闭按钮")
 
         # 找到选择角色，然后按下去
-        if match_img_click(
-            gs.select_role_temp_gray, config["程序变量"]["置信度"]["选择角色"]
-        ):
+        if match_img_click(gs.select_role_temp_gray, config["置信度"]["选择角色"]):
             print("找到 选择角色")
             config["使用角色"] += 1
             gs.场景 = "游戏开始"
@@ -2381,7 +2405,14 @@ def predict_game():
 
         mode = config.get("模式")
         if auto_make_out_dir:
-            if not os.path.exists(auto_make_out_dir):
+            override = config["自动标记"].get("覆写", False)
+            if not override and os.path.exists(auto_make_out_dir):
+                print(
+                    f"目录已存在：'{auto_make_out_dir}'，如果要覆盖加上 '覆写: true', 配置"
+                )
+                return
+
+            if override and not os.path.exists(auto_make_out_dir):
                 os.makedirs(auto_make_out_dir, exist_ok=False)
 
         while hk.running:
@@ -2457,7 +2488,7 @@ def bootstrap():
 
     gs = GameStatus()
     change_player()
-    
+
     # pprint.pp(config)
     testPlayerMoveSpeed = TestPlayerMoveSpeed()
 
