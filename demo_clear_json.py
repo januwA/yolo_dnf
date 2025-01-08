@@ -11,7 +11,7 @@ import json
 if __name__ == "__main__":
     jf_paths = glob.glob(
         # os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\截图", "*/*.json")
-        os.path.join(r"C:\Users\16418\Desktop\FenBaoYouChen\segment_merge4_1", "*.json")
+        os.path.join(r"C:\Users\16418\Desktop\LiuYuPuBu\am_1", "*.json")
     )
 
     need_removes = []

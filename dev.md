@@ -66,11 +66,9 @@ print(torch.cuda.is_available())  # 输出True表示GPU可用
 ```sh
 yolo help
 
-yolo train model=yolov8n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0
+yolo task=detect mode=train model=yolo11n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\LiuYuPuBu"
 
-yolo train model="C:\Users\16418\Desktop\FenBaoYouChen\trains\train6\weights\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\segment_merge_player_enemy\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\test-trains"
-
-yolo train model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\auto_mark_jianHun\YOLODataset\dataset.yaml" epochs=5 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\test-trains"
+yolo task=detect mode=train model="pre_best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\merge1\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\FenBaoYouChen\merge1"
 ```
 
 - task=detect: 指定任务为目标检测
@@ -86,7 +84,14 @@ yolo train model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" data="C:\
 - imgsz=640: 设置输入图像的尺寸为640x640像素
 - device=0 指定使用哪个GPU进行检测
 - project=目录  指定了输出根目录
-- pretrained
+
+## 从中断训练中恢复
+
+从上次保存的检查点恢复训练。自动加载模型权重、优化器状态和历时计数，无缝继续训练。
+
+```sh
+yolo train resume model=path/to/last.pt
+```
 
 
 ## 转换模型格式
@@ -104,6 +109,8 @@ yolo predict model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" source=
 - 结果在`C:\Users\16418\Desktop\FenBaoYouChen\Config\best.onnx`
 
 ## 测试模型
+
+https://docs.ultralytics.com/zh/modes/predict/
 
 使用训练好的best.pt模型
 

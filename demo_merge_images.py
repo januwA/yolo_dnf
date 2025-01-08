@@ -20,7 +20,7 @@ label = {
 
 out_dir = r"C:\Users\16418\Desktop\FenBaoYouChen\merge1"
 save_i = 1
-save_prefix = "mg_"
+save_prefix = "mg1_"
 
 def jsonpath_from_imagepath(imagepath: str):
     fname = os.path.splitext(os.path.basename(imagepath))[0]
@@ -177,7 +177,6 @@ def merge_images_randomly_with_alpha(map_img_path, smap_rect, lst):
     with open(os.path.join(out_dir, f"{save_prefix}{save_i}.json"), "w", encoding="utf-8") as f:
         json.dump(labelme_file_data, f, indent=2)
     save_i += 1
-    print(save_i)
 
 
 def merge_image_to_mapimage():
