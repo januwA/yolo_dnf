@@ -594,6 +594,22 @@ class GameStatus(object):
                     item["men_map"][tuple(e["room"])] = tuple(e["men"])
             self._match_path.append(item)
 
+        # 加载角色的技能
+        skill_bar.list.clear()
+        sk_list: list[dict] = config["技能表"][self.pinfo["技能"]]
+        for obj in sk_list:
+            sk = Skill(
+                key=obj.get("key", None),
+                ct=obj.get("ct"),
+                mk=obj.get("mk", None),
+                buff=obj.get("buff", False),
+                boss=obj.get("boss", False),
+                dt=obj.get("dt", 0.03),
+                ut=obj.get("ut", 0),
+                name=obj.get("name", ""),
+            )
+            skill_bar.add(sk)
+        
     def __init__(self):
         self.pause = False
         self.swich_key = pynput.keyboard.Key.delete
@@ -864,25 +880,6 @@ def load_img_and_gray(path: str, code=cv2.COLOR_BGR2GRAY):
     temp = cv2.imdecode(np.fromfile(path, dtype=np.uint8), -1)
     temp_gray = None if code is None else cv2.cvtColor(temp, code)
     return temp, temp_gray
-
-
-def change_player():
-    skill_bar.list.clear()
-    gs.load_pinfo()
-
-    sk_list: list[dict] = config["技能表"][gs.pinfo["技能"]]
-    for obj in sk_list:
-        sk = Skill(
-            key=obj.get("key", None),
-            ct=obj.get("ct"),
-            mk=obj.get("mk", None),
-            buff=obj.get("buff", False),
-            boss=obj.get("boss", False),
-            dt=obj.get("dt", 0.03),
-            ut=obj.get("ut", 0),
-            name=obj.get("name", ""),
-        )
-        skill_bar.add(sk)
 
 
 def match_img_smap2(smap):
@@ -2300,9 +2297,9 @@ def auto_game(box_map: dict):
         # 找到选择角色，然后按下去
         if match_img_click(gs.select_role_temp_gray, config["置信度"]["选择角色"]):
             print("找到 选择角色")
-            config["使用角色"] += 1
             gs.场景 = "游戏开始"
-            change_player()
+            config["使用角色"] += 1
+            gs.load_pinfo()
         else:
             print("没找到选择角色按钮")
             key_press(config["快捷键"]["esc"])
@@ -2487,7 +2484,6 @@ def bootstrap():
         config["技能表"] = load_json5(config["技能表"])
 
     gs = GameStatus()
-    change_player()
 
     # pprint.pp(config)
     testPlayerMoveSpeed = TestPlayerMoveSpeed()

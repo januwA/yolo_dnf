@@ -68,7 +68,7 @@ yolo help
 
 yolo task=detect mode=train model=yolo11n.pt data=YOLODataset\dataset.yaml epochs=100 imgsz=640 device=0 project="C:\Users\16418\Desktop\LiuYuPuBu"
 
-yolo task=detect mode=train model="C:\Users\16418\Desktop\FenBaoYouChen\Config\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\data\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project=C:\Users\16418\Desktop\FenBaoYouChen
+yolo task=detect mode=train model="C:\Users\16418\Desktop\FenBaoYouChen\train\weights\best.pt" data="C:\Users\16418\Desktop\FenBaoYouChen\data\YOLODataset\dataset.yaml" epochs=100 imgsz=640 device=0 project=C:\Users\16418\Desktop\FenBaoYouChen
 ```
 
 - task=detect: 指定任务为目标检测
@@ -308,7 +308,6 @@ pip install pyinstaller
 pyinstaller -F main.py
 
 pyinstaller main.py -y
-pyinstaller --upx-dir D:\apps\upx-4.2.4-win64 main.py
 
 执行打包的exe出现错误
 NameError name 'name' is not defined

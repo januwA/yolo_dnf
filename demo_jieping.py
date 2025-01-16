@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image, ImageGrab
 
 from demo_matchimg import find_template
-from main import window_capture
+from pydnf import window_capture
 
 # hwnd = win32gui.GetForegroundWindow()
 hwnd = 133252
