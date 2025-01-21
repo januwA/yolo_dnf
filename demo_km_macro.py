@@ -1,10 +1,13 @@
 import json
 import re
 import time
+import winsound
 import pyautogui
 import pynput
 from pynput.keyboard import Key, Listener, KeyCode
 from pynput.mouse import Button, Controller
+import pydirectinput
+import random
 
 # 初始化变量
 exit_app_key = Key.delete
@@ -27,27 +30,27 @@ def key_to_string(key):
 
 def on_press(key: Key | KeyCode):
     global is_recording
+    now = time.time()
+
     if is_recording and key != exit_app_key:
         val = key_to_string(key)
         if val is None:
             return True
 
-        和上次一样 = False
-        action = {"a": "kd", "val": val, "t": time.time()}
-        if (
-            len(actions)
-            and actions[-1]["a"] == action["a"]
-            and actions[-1]["val"] == action["val"]
-        ):
-            和上次一样 = True
+        if len(actions) and actions[-1]["a"] == "kd" and actions[-1]["val"] == val:
+            print(f"多次按下同一个键:{key}")
+            return True
 
-        if not 和上次一样:
-            actions.append(action)
+        action = {"a": "kd", "val": val, "t": now}
+        actions.append(action)
 
 
 def on_release(key):
     global is_recording
+    now = time.time()
+
     if key == exit_app_key:
+        winsound.Beep(frequency=1000, duration=1000)
         # 将 actions 保存到文件
         with open(outfile, "w", encoding="utf-8") as f:
             json.dump(actions, f)
@@ -55,6 +58,7 @@ def on_release(key):
 
     if key == Key.end:
         is_recording = not is_recording
+        winsound.Beep(frequency=1000, duration=1000)
         return True
 
     if is_recording:
@@ -62,7 +66,18 @@ def on_release(key):
         if val is None:
             return True
 
-        action = {"a": "ku", "val": val, "t": time.time()}
+        action = {"a": "ku", "val": val, "t": now}
+
+        if (
+            len(actions)
+            and actions[-1]["a"] == "kd"
+            and actions[-1]["val"] == val
+            and now - actions[-1]["t"] < 0.18
+        ):
+            print(f"{key}按下{actions[-1]["t"]}和抬起{now}的时间很短，作为点击")
+            actions[-1]["a"] = "kp"
+            actions[-1]["t"] = now
+            return True
         actions.append(action)
 
     return True
@@ -70,15 +85,41 @@ def on_release(key):
 
 def on_click(x, y, button, pressed):
     global is_recording
+    now = time.time()
 
-    k = "down" if pressed else "up"
+    print('point: ', x, y)
+
     if is_recording:
         if button == Button.left:
-            action = {"a": f"lm{k}", "val": (x, y), "t": time.time()}
-            actions.append(action)
+            if pressed:
+                action = {"a": f"lmdown", "val": (x, y), "t": now}
+                actions.append(action)
+            else:
+                if (
+                    len(actions)
+                    and actions[-1]["a"] == "lmdown"
+                    and now - actions[-1]["t"] < 0.18
+                ):
+                    actions[-1]["a"] = "lmclick"
+                    actions[-1]["t"] = now
+                    return True
+                action = {"a": f"lmup", "val": (x, y), "t": now}
+                actions.append(action)
         elif button == Button.right:
-            action = {"a": f"rm{k}", "val": (x, y), "t": time.time()}
-            actions.append(action)
+            if pressed:
+                action = {"a": f"rmdown", "val": (x, y), "t": now}
+                actions.append(action)
+            else:
+                if (
+                    len(actions)
+                    and actions[-1]["a"] == "rmdown"
+                    and now - actions[-1]["t"] < 0.18
+                ):
+                    actions[-1]["a"] = "rmclick"
+                    actions[-1]["t"] = now
+                    return True
+                action = {"a": f"rmup", "val": (x, y), "t": now}
+                actions.append(action)
 
 
 # 监听键盘和鼠标
@@ -92,7 +133,7 @@ def listener_all():
                     continue
 
 
-def reverse_all(file: str, sleep_seconds=0):
+def reverse_macro_all(file: str, sleep_seconds=0):
     if sleep_seconds:
         time.sleep(sleep_seconds)
 
@@ -105,17 +146,23 @@ def reverse_all(file: str, sleep_seconds=0):
         if becore_action is not None:
             seconds = action["t"] - becore_action["t"]
             duration = seconds
-            if seconds < 0.1:
-                seconds = 0.1
+            if duration > 3:
+                duration = random.uniform(2, 3)
             time.sleep(seconds)
 
         match action["a"]:
             case "kp":
-                pyautogui.press(action["val"])
+                pydirectinput.press(action["val"])
             case "kd":
-                pyautogui.keyDown(action["val"])
+                pydirectinput.keyDown(action["val"])
             case "ku":
-                pyautogui.keyUp(action["val"])
+                pydirectinput.keyUp(action["val"])
+            case "lmclick":
+                pyautogui.moveTo(action["val"][0], action["val"][1], duration=duration)
+                pyautogui.leftClick()
+            case "rmclick":
+                pyautogui.moveTo(action["val"][0], action["val"][1], duration=duration)
+                pyautogui.leftClick()
             case "lmdown":
                 pyautogui.moveTo(action["val"][0], action["val"][1], duration=duration)
                 pyautogui.mouseDown(button=pyautogui.LEFT)
@@ -130,6 +177,6 @@ def reverse_all(file: str, sleep_seconds=0):
 
 
 if __name__ == "__main__":
-    outfile = "actions2.json"
+    outfile = "打开副本.json"
     listener_all()
-    # reverse_all(outfile, 3)
+    # reverse_macro_all(outfile, 3)

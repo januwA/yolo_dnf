@@ -57,7 +57,7 @@ def find_template(img, template, threshold=0.25):
 #     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    img = imread2(r"C:\Users\16418\Desktop\1600_1200_100.jpg")
+    img = imread2(r"C:\Users\16418\Desktop\微信截图_20250119204355.png")
     # img = imread2(r"C:\Users\16418\Desktop\1600_1200_50.jpg") # # ui缩小了50%
     # img = imread2(r"C:\Users\16418\Desktop\800_600.jpg") # 分辨率缩小了50%
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     img_h, img_w = img.shape[:2]
 
     # 匹配的模板来自 1600_1200_100.jpg
-    temp = imread2(r"C:\Users\16418\Desktop\temp.jpg")
+    temp = imread2(r"C:\Users\16418\Desktop\zxsj\config\通关_最小化窗口.jpg")
     # temp = cv2.resize(temp, None, fx=0.5, fy=0.5) # ui缩小了50%
     # temp = cv2.resize(temp, None, fx=0.5, fy=0.5) # 分辨率缩小了50%
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     print(maxVal)
     
     # 过滤信任度小于0.7的结果
-    loc = np.where(res >= 0.7)
+    loc = np.where(res >= 0.6)
     
     # 绘制矩形
     for pt in zip(*loc[::-1]):
