@@ -38,7 +38,7 @@ def on_press(key: Key | KeyCode):
             return True
 
         if len(actions) and actions[-1]["a"] == "kd" and actions[-1]["val"] == val:
-            print(f"多次按下同一个键:{key}")
+            # print(f"多次按下同一个键:{key}")
             return True
 
         action = {"a": "kd", "val": val, "t": now}
@@ -74,7 +74,7 @@ def on_release(key):
             and actions[-1]["val"] == val
             and now - actions[-1]["t"] < 0.18
         ):
-            print(f"{key}按下{actions[-1]["t"]}和抬起{now}的时间很短，作为点击")
+            # print(f"{key}按下{actions[-1]["t"]}和抬起{now}的时间很短，作为点击")
             actions[-1]["a"] = "kp"
             actions[-1]["t"] = now
             return True
@@ -131,6 +131,7 @@ def listener_all():
                     time.sleep(1)
                     print("等待启动 end")
                     continue
+                time.sleep(0.01)
 
 
 def reverse_macro_all(file: str, sleep_seconds=0):
@@ -177,6 +178,6 @@ def reverse_macro_all(file: str, sleep_seconds=0):
 
 
 if __name__ == "__main__":
-    outfile = "打开副本.json"
-    listener_all()
-    # reverse_macro_all(outfile, 3)
+    outfile = "北荒战云_前往天衡传送门.json"
+    # listener_all()
+    reverse_macro_all(outfile, 3)

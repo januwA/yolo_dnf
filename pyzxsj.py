@@ -17,9 +17,11 @@ import numpy as np
 import pyautogui
 from pynput.keyboard import Listener, Key
 import pydirectinput
+
 pydirectinput.FAILSAFE = True
 import random
-from ultralytics import YOLO
+
+# from ultralytics import YOLO
 import win32gui
 import win32ui
 import win32con
@@ -323,8 +325,18 @@ def 领取战令():
 def 赠送好友礼物():
     exe_hotkey(快捷键["仙友"])
     pyautogui.click(545, 428, duration=random.uniform(1, 2))  # 聊天
-    for i in range(random.randint(3, 5)):
-        pyautogui.click(971, 706, duration=random.uniform(1, 2))  # 赠送玫瑰花
+
+    loc = None
+    while True:
+        loc = 检测_聊天玫瑰花()
+        # 如果没有玫瑰花，则可能是系统消息
+        if loc is None:
+            pyautogui.click(708, 366, duration=random.uniform(1, 2))  # 点击第二个聊天
+        else:
+            break
+
+    for _ in range(3):
+        pyautogui.click(loc[0], loc[1], duration=random.uniform(1, 2))  # 赠送玫瑰花
 
     time.sleep(1)
     exe_hotkey(快捷键["esc"])
@@ -368,6 +380,20 @@ def 检测_已通关():
     if loc is not None and loc[0] > img_w / 2 and loc[1] > img_h / 2:
         return loc
     return None
+
+
+def 检测_聊天玫瑰花():
+    img = window_capture(game_hwnd)
+    loc = match_img(
+        img,
+        imread2(
+            r"C:\Users\16418\Desktop\zxsj\config\聊天_玫瑰花.jpg",
+            "聊天_玫瑰花",
+        ),
+        conf=0.7,
+        to_center=True,
+    )
+    return loc
 
 
 def 检测_治疗救援():
@@ -632,6 +658,108 @@ def 演奏_笛():
     exe_hotkey(快捷键["esc"])
 
 
+def 挂机按f():
+    while True:
+        if pause:
+            return False
+        pydirectinput.press("f")
+        time.sleep(5)  # 进度条
+
+
+def 钓鱼():
+    # 检查是否持竿
+    if (
+        match_img(
+            window_capture(),
+            imread2(r"C:\Users\16418\Desktop\zxsj\config\鱼_持竿.jpg", "鱼_持竿"),
+            0.7,
+            to_center=True,
+        )
+        is None
+    ):
+        # 打开背包，找到鱼竿，然后右键
+        exe_hotkey(快捷键["包裹"])
+        time.sleep(random.uniform(1, 2))
+        point = match_img(
+            window_capture(),
+            imread2(r"C:\Users\16418\Desktop\zxsj\config\青竹鱼竿.jpg", "青竹鱼竿"),
+            0.7,
+            to_center=True,
+        )
+        if point is None:
+            print("没找到鱼竿")
+            return False
+        else:
+            print("持竿")
+            pyautogui.rightClick(point[0], point[1], duration=random.uniform(1, 2))
+            time.sleep(random.uniform(1, 2))
+
+    print("抛竿")
+    pydirectinput.keyDown("space")
+    time.sleep(random.uniform(0.6, 1))
+    pydirectinput.keyUp("space")
+
+    time.sleep(random.uniform(2, 3))
+
+    print("等待鱼")
+
+    # 等待鱼，一直按空格直到鱼上钩
+    while True:
+        if pause:
+            return False
+        if (
+            match_img(
+                window_capture(),
+                imread2(r"C:\Users\16418\Desktop\zxsj\config\鱼_上钩.jpg", "鱼_上钩"),
+                0.7,
+                to_center=True,
+            )
+            is not None
+        ):
+            print("鱼上钩")
+            break
+
+        pydirectinput.press("space")  # 收杆
+        time.sleep(random.uniform(0.3, 0.5))
+
+    print("开始收杆")
+
+    while True:
+        if pause:
+            return False
+
+        if (
+            match_img(
+                window_capture(),
+                imread2(r"C:\Users\16418\Desktop\zxsj\config\鱼_收杆.jpg", "鱼_收杆"),
+                0.7,
+            )
+            is None
+        ):
+            pydirectinput.keyUp("space")
+            print("收杆结束")
+            break
+
+        # if (
+        #     match_img(
+        #         window_capture(),
+        #         imread2(r"C:\Users\16418\Desktop\zxsj\config\鱼_挣扎.jpg", "鱼_挣扎"),
+        #         0.7,
+        #     )
+        #     is not None
+        # ):
+        #     print("鱼挣扎")
+        #     pydirectinput.keyUp("space")
+        #     time.sleep(random.uniform(0.5, 1))
+        #     pydirectinput.keyDown("space")
+        #     time.sleep(random.uniform(1.8, 2))
+
+        pydirectinput.keyDown("space")
+        time.sleep(random.uniform(1.5, 2))
+        pydirectinput.keyUp("space")
+        time.sleep(random.uniform(0.3, 0.5))
+
+
 def bootstrap():
     global pause, yolo_model, game_hwnd
 
@@ -677,11 +805,17 @@ def bootstrap():
 class MyWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
+        self.col_layout = QtWidgets.QVBoxLayout(self)
+
+        self.layout = QtWidgets.QHBoxLayout(self)
         self.启动按钮 = QtWidgets.QPushButton("确定")
         self.停止按钮 = QtWidgets.QPushButton("停止")
         self.绑定游戏窗口 = QtWidgets.QPushButton("绑定游戏窗口")
-
         self.功能选择 = QtWidgets.QComboBox()
+
+        self.启动按钮.clicked.connect(self.start)
+        self.绑定游戏窗口.clicked.connect(self.get_game_hwdn)
+        self.停止按钮.clicked.connect(self.stop_event)
         self.功能选择.addItems(
             [
                 "焚香谷副本",
@@ -691,19 +825,26 @@ class MyWidget(QtWidgets.QWidget):
                 "修改个性签名",
                 "演奏 琴",
                 "演奏 笛",
+                "挂机按f",
+                "北荒战云_前往天衡传送门",
+                "钓鱼",
+                "点击鼠标左键",
+                "点击鼠标右键",
             ]
         )
 
-        self.layout = QtWidgets.QHBoxLayout(self)
         self.layout.addWidget(self.绑定游戏窗口)
         self.layout.addWidget(self.功能选择)
         self.layout.addWidget(self.启动按钮)
         self.layout.addWidget(self.停止按钮)
+        self.col_layout.addLayout(self.layout)
 
-        self.启动按钮.clicked.connect(self.start)
-        self.绑定游戏窗口.clicked.connect(self.get_game_hwdn)
-        self.停止按钮.clicked.connect(self.stop_event)
-        
+        # 参数行
+        self.layout2 = QtWidgets.QHBoxLayout(self)
+        self.param1 = QtWidgets.QLineEdit(self)
+        self.layout2.addWidget(self.param1)
+        self.col_layout.addLayout(self.layout2)
+
         # 绑定快捷键
         shortcut_start = QtGui.QShortcut(QtGui.QKeySequence("delete"), self)
         shortcut_start.activated.connect(self.start)
@@ -739,6 +880,8 @@ class MyWidget(QtWidgets.QWidget):
     def start(self):
         global game_hwnd, pause
 
+        param1 = self.param1.text()
+
         if not game_hwnd:
             print("没找到游戏窗口")
             return
@@ -773,10 +916,37 @@ class MyWidget(QtWidgets.QWidget):
             threading.Thread(target=赠送好友礼物).start()
         elif action == "修改个性签名":
             threading.Thread(target=修改个性签名).start()
+        elif action == "钓鱼":
+
+            def f1():
+                while True:
+                    if pause:
+                        break
+                    钓鱼()
+                print("钓鱼 结束")
+
+            threading.Thread(target=f1).start()
         elif action == "演奏 琴":
             threading.Thread(target=演奏_琴).start()
         elif action == "演奏 笛":
             threading.Thread(target=演奏_笛).start()
+        elif action == "挂机按f":
+            threading.Thread(target=挂机按f).start()
+        elif action == "北荒战云_前往天衡传送门":
+            reverse_macro_all(
+                r"C:\Users\16418\Desktop\zxsj\config\北荒战云_前往天衡传送门.json", 1
+            )
+        elif action == "点击鼠标左键":
+            time.sleep(3)
+            for _ in range(int(param1)):
+                pydirectinput.click()
+                time.sleep(0.01)
+
+        elif action == "点击鼠标右键":
+            time.sleep(3)
+            for _ in range(int(param1)):
+                pydirectinput.click(button=pydirectinput.RIGHT)
+                time.sleep(0.01)
 
 
 def on_about_to_quit():
@@ -792,7 +962,7 @@ def on_about_to_quit():
 # 悬停施法：关闭
 if __name__ == "__main__":
     # time.sleep(2)
-    # loc = 检测_原地疗伤()
+    # loc = 检测_聊天玫瑰花()
     # if loc:
     #     pyautogui.moveTo(loc[0], loc[1])
     # else:
