@@ -18,7 +18,7 @@ import pyautogui
 from pynput.keyboard import Listener, Key
 import pydirectinput
 
-pydirectinput.FAILSAFE = True
+pydirectinput.FAILSAFE = False
 import random
 
 # from ultralytics import YOLO
@@ -52,7 +52,7 @@ def imread2(p: str, cache_key: str) -> cv2.typing.MatLike:
     return img
 
 
-def match_img(img, temp, conf=0.9, to_center=False):
+def match_img(img, temp, conf=0.9, to_center=False, ret_list=False):
     temp_h, temp_w = temp.shape[:2]
     res = cv2.matchTemplate(img, temp, cv2.TM_CCOEFF_NORMED)
     _, maxVal, _, maxLoc = cv2.minMaxLoc(res)
@@ -60,6 +60,17 @@ def match_img(img, temp, conf=0.9, to_center=False):
     loc = np.where(res >= conf)
     loc_lst = list(zip(*loc[::-1]))
     if len(loc_lst):
+        if ret_list:
+            rect_lst = list(
+                map(
+                    lambda loc: (loc[0], loc[1], loc[0] + temp_w, loc[1] + temp_h),
+                    loc_lst,
+                )
+            )
+            if to_center:
+                return list(map(lambda rect: rect_center(rect), rect_lst))
+            return rect_lst
+
         if to_center:
             maxLoc = rect_center(
                 (
@@ -236,82 +247,27 @@ def on_press_listener(key):
         return True
 
 
-技能_list = [
-    {
-        "key": "1",
-        "施法": 1.5,
-        "冷却": 0,
-    },
-    {
-        "key": "2",
-        "施法": 1.5,
-        "冷却": 9.5,
-    },
-    {
-        "key": "3",
-        "施法": 0.5,
-        "冷却": 15,
-    },
-    {
-        "key": "4",
-        "施法": 2,
-        "冷却": 5.7,
-    },
-    {
-        "key": "5",
-        "施法": 0.7,
-        "冷却": 0,
-    },
-    {
-        "key": "e",
-        "施法": 1.3,
-        "冷却": 20,
-    },
-    {
-        "key": "r",
-        "施法": 0.5,
-        "冷却": 7.6,
-    },
-    {
-        "key": "f2",
-        "施法": 6,
-        "冷却": 115,
-    },
-    # {
-    #     "key": "f3",
-    #     "施法": 0.5,
-    #     "冷却": 60,
-    # },
-]
-技能_i = 0
+def 释放技能(_lst: list[str] = None, one=False):
+    """只按快捷键, one循环完一次就退出"""
+    lst = (
+        ["1", "2", "3", "4", "5", "6", "q", "e", "r", "t", "f1", "f2", "f3"]
+        if _lst is None or len(_lst) == 0
+        else _lst
+    )
+    i = 0
+    pydirectinput.press(快捷键["自动选择目标"])
+    while True:
+        if pause:
+            break
 
-
-def 释放技能(lst: list[str] = []):
-    """
-    释放一个技能
-    lst: 只是用固定的技能
-    """
-    global 技能_list, 技能_i
-    技能 = 技能_list[技能_i]
-    if len(lst) and 技能["key"] not in lst:
-        return
-
-    now = time.time()
-    if now - 技能.get("释放时间", 0) > 技能.get("冷却", 0):
-        try:
-            pydirectinput.press(技能["key"])
-            技能["释放时间"] = now
-            time.sleep(技能.get("施法", 0))  # 等待施法
-        except:
-            pass
-    技能_i += 1
-
-    if len(lst):
-        if 技能_i >= len(lst):
-            技能_i = 0
-    else:
-        if 技能_i >= len(技能_list):
-            技能_i = 0
+        pydirectinput.press(lst[i])
+        i += 1
+        if i >= len(lst):
+            if one:
+                break
+            i = 0
+            pydirectinput.press(快捷键["自动选择目标"])
+        time.sleep(random.uniform(0.1, 0.3))
 
 
 def 领取战令():
@@ -327,11 +283,14 @@ def 赠送好友礼物():
     pyautogui.click(545, 428, duration=random.uniform(1, 2))  # 聊天
 
     loc = None
+    h = 80  # 每个高度
+    b_h = 366
     while True:
         loc = 检测_聊天玫瑰花()
         # 如果没有玫瑰花，则可能是系统消息
         if loc is None:
-            pyautogui.click(708, 366, duration=random.uniform(1, 2))  # 点击第二个聊天
+            pyautogui.click(708, b_h, duration=random.uniform(1, 2))  # 点击第二个聊天
+            b_h += h
         else:
             break
 
@@ -514,8 +473,41 @@ def 焚香谷_副本():
         time.sleep(random.uniform(1, 2))
         pyautogui.click(1109, 217, duration=random.uniform(1, 2))  # 5人小队
         pyautogui.click(1207, 145, duration=random.uniform(1, 2))  # 普通
-        pyautogui.click(1347, 199, duration=random.uniform(1, 2))  # 隐藏大型副本
-        pyautogui.click(1451, 495, duration=random.uniform(1, 2))  # 智能队友
+
+        match_玄火烬八荒 = match_img(
+            window_capture(game_hwnd),
+            imread2(
+                r"C:\Users\16418\Desktop\zxsj\config\玄火烬八荒.jpg",
+                "玄火烬八荒",
+            ),
+            conf=0.7,
+        )
+        if match_玄火烬八荒 is None:
+            pyautogui.click(1347, 199, duration=random.uniform(1, 2))  # 隐藏大型副本
+            pyautogui.click(1484, 495, duration=random.uniform(1, 2))  # 智能队友
+        else:
+            # 直接找到智能队友,点击
+            rectes = match_img(
+                window_capture(game_hwnd),
+                imread2(
+                    r"C:\Users\16418\Desktop\zxsj\config\智能队友.jpg",
+                    "智能队友",
+                ),
+                conf=0.7,
+                ret_list=True,
+            )
+            if type(rectes) is list:
+                for rect in rectes:
+                    x1, y1, x2, y2 = rect
+                    if y1 < 495 < y2:
+                        pyautogui.click(
+                            x1 + int((x2 - x1) / 2), 495, duration=random.uniform(1, 2)
+                        )  # 智能队友
+                        break
+            else:
+                print("没有找到只能队友")
+                return False
+
         pyautogui.click(865, 564, duration=random.uniform(1, 2))  # 确定
 
         time.sleep(10)  # 等10秒进度条在检查
@@ -531,7 +523,6 @@ def 焚香谷_副本():
     # 将鼠标移动到左上角
     pyautogui.moveTo(2, 2)
 
-    向前走几秒 = 2
     while True:
         if pause:
             return False
@@ -553,33 +544,7 @@ def 焚香谷_副本():
             time.sleep(1)
             break
 
-        释放技能(["1"])
-        # 向右看
-        pydirectinput.keyDown("right")
-        time.sleep(random.uniform(0.3, 1))
-        pydirectinput.keyUp("right")
-
-        # if 检查_技能距离不够() is not None:
-        #     # 向右看
-        #     pydirectinput.keyDown("right")
-        #     time.sleep(random.uniform(0.3, 1))
-        #     pydirectinput.keyUp("right")
-
-        #     # 在检查一次
-        #     if 检查_技能距离不够() is not None:
-        #         # 向前走
-        #         pydirectinput.keyDown(快捷键["前"])
-        #         time.sleep(向前走几秒)
-        #         pydirectinput.keyUp(快捷键["前"])
-        #         向前走几秒 += 1
-        #         if 向前走几秒 > 5:
-        #             向前走几秒 = 5
-        #     else:
-        #         释放技能()
-        #         向前走几秒 = 2
-        # else:
-        #     释放技能()
-        #     向前走几秒 = 2
+        释放技能(None, one=True)
 
         time.sleep(random.uniform(0.2, 0.5))
 
@@ -597,7 +562,7 @@ def 焚香谷_副本():
 
         img = window_capture(game_hwnd)
         img_h, img_w = img.shape[:2]
-        loc = match_img(
+        rect = match_img(
             img,
             imread2(
                 r"C:\Users\16418\Desktop\zxsj\config\打坐图标.jpg",
@@ -605,7 +570,7 @@ def 焚香谷_副本():
             ),
             conf=0.8,
         )
-        if loc is not None and loc[1] > img_h / 2:
+        if rect is not None and rect[1] > img_h / 2:
             break
         time.sleep(random.uniform(0.2, 0.5))
 
@@ -663,7 +628,15 @@ def 挂机按f():
         if pause:
             return False
         pydirectinput.press("f")
-        time.sleep(5)  # 进度条
+        time.sleep(random.uniform(0.5, 1))  # 进度条
+
+
+def 猜拳():
+    while True:
+        if pause:
+            return False
+        pyautogui.click(1346, 665, duration=random.uniform(0.3, 0.5))  # 剪刀
+        time.sleep(random.uniform(0.5, 1))
 
 
 def 钓鱼():
@@ -830,6 +803,7 @@ class MyWidget(QtWidgets.QWidget):
                 "钓鱼",
                 "点击鼠标左键",
                 "点击鼠标右键",
+                "猜拳",
             ]
         )
 
@@ -846,12 +820,15 @@ class MyWidget(QtWidgets.QWidget):
         self.col_layout.addLayout(self.layout2)
 
         # 绑定快捷键
-        shortcut_start = QtGui.QShortcut(QtGui.QKeySequence("delete"), self)
-        shortcut_start.activated.connect(self.start)
         shortcut_end = QtGui.QShortcut(QtGui.QKeySequence("end"), self)
-        shortcut_end.activated.connect(self.stop_event)
-        shortcut_hwdn = QtGui.QShortcut(QtGui.QKeySequence("insert"), self)
-        shortcut_hwdn.activated.connect(self.get_game_hwdn)
+        shortcut_end.activated.connect(self.handle_shortcut_end)
+
+    @QtCore.Slot()
+    def handle_shortcut_end(self):
+        if pause:
+            self.start()
+        else:
+            self.stop_event()
 
     @QtCore.Slot()
     def stop_event(self):
@@ -901,15 +878,7 @@ class MyWidget(QtWidgets.QWidget):
 
             threading.Thread(target=f1).start()
         elif action == "自动释放技能":
-
-            def f1():
-                while True:
-                    if pause:
-                        break
-                    释放技能()
-                print("释放技能 结束")
-
-            threading.Thread(target=f1).start()
+            threading.Thread(target=释放技能).start()
         elif action == "领取战令":
             threading.Thread(target=领取战令).start()
         elif action == "赠送好友礼物":
@@ -947,6 +916,8 @@ class MyWidget(QtWidgets.QWidget):
             for _ in range(int(param1)):
                 pydirectinput.click(button=pydirectinput.RIGHT)
                 time.sleep(0.01)
+        elif action == "猜拳":
+            threading.Thread(target=猜拳).start()
 
 
 def on_about_to_quit():
@@ -961,12 +932,28 @@ def on_about_to_quit():
 # 技能释放方向: 角色面向
 # 悬停施法：关闭
 if __name__ == "__main__":
-    # time.sleep(2)
+    time.sleep(2)
     # loc = 检测_聊天玫瑰花()
     # if loc:
     #     pyautogui.moveTo(loc[0], loc[1])
     # else:
     #     pyautogui.moveTo(2, 2)
+
+    # img = window_capture()
+    # rectes = match_img(
+    #     img,
+    #     imread2(
+    #         r"C:\Users\16418\Desktop\zxsj\config\智能队友.jpg",
+    #         "智能队友",
+    #     ),
+    #     conf=0.7,
+    #     ret_list=True,
+    # )
+    # for rect in rectes:
+    #     x1, y1, x2, y2 = rect
+    #     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    # cv2.imshow('img', img)
+    # cv2.waitKey(0)
 
     app = QtWidgets.QApplication([])
     app.aboutToQuit.connect(on_about_to_quit)
