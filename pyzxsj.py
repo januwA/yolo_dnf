@@ -52,7 +52,13 @@ def imread2(p: str, cache_key: str) -> cv2.typing.MatLike:
     return img
 
 
-def match_img(img, temp, conf=0.9, to_center=False, ret_list=False):
+def match_img(img, temp, conf=0.9, to_center=True, ret_list=False):
+    if img is None:
+        img = window_capture()
+
+    if type(temp) is str:
+        temp = imread2(rf"C:\zxsj\config\{temp}.jpg", temp)
+
     temp_h, temp_w = temp.shape[:2]
     res = cv2.matchTemplate(img, temp, cv2.TM_CCOEFF_NORMED)
     _, maxVal, _, maxLoc = cv2.minMaxLoc(res)
@@ -250,7 +256,20 @@ def on_press_listener(key):
 def 释放技能(_lst: list[str] = None, one=False):
     """只按快捷键, one循环完一次就退出"""
     lst = (
-        ["1", "2", "3", "4", "5", "6", "q", "e", "r", "t", "f1", "f2", "f3"]
+        [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            # "q", "e", 保命技能
+            "r",
+            "t",
+            "f1",
+            "f2",
+            "f3",
+        ]
         if _lst is None or len(_lst) == 0
         else _lst
     )
@@ -282,20 +301,20 @@ def 赠送好友礼物():
     exe_hotkey(快捷键["仙友"])
     pyautogui.click(545, 428, duration=random.uniform(1, 2))  # 聊天
 
-    loc = None
+    point = None
     h = 80  # 每个高度
     b_h = 366
     while True:
-        loc = 检测_聊天玫瑰花()
+        point = match_img(None, "聊天_玫瑰花", conf=0.7)
         # 如果没有玫瑰花，则可能是系统消息
-        if loc is None:
+        if point is None:
             pyautogui.click(708, b_h, duration=random.uniform(1, 2))  # 点击第二个聊天
             b_h += h
         else:
             break
 
     for _ in range(3):
-        pyautogui.click(loc[0], loc[1], duration=random.uniform(1, 2))  # 赠送玫瑰花
+        pyautogui.click(point[0], point[1], duration=random.uniform(1, 2))  # 赠送玫瑰花
 
     time.sleep(1)
     exe_hotkey(快捷键["esc"])
@@ -323,111 +342,25 @@ def 修改个性签名():
     exe_hotkey(快捷键["esc"])
 
 
-def 检测_已通关():
-    """从图片中检测，最小化窗口按钮，返回按钮的中心点"""
-    img = window_capture(game_hwnd)
-    img_h, img_w = img.shape[:2]
-    loc = match_img(
-        img,
-        imread2(
-            r"C:\Users\16418\Desktop\zxsj\config\通关_最小化窗口.jpg",
-            "通关_最小化窗口",
-        ),
-        conf=0.5,
-        to_center=True,
-    )
-    if loc is not None and loc[0] > img_w / 2 and loc[1] > img_h / 2:
-        return loc
-    return None
-
-
-def 检测_聊天玫瑰花():
-    img = window_capture(game_hwnd)
-    loc = match_img(
-        img,
-        imread2(
-            r"C:\Users\16418\Desktop\zxsj\config\聊天_玫瑰花.jpg",
-            "聊天_玫瑰花",
-        ),
-        conf=0.7,
-        to_center=True,
-    )
-    return loc
-
-
 def 检测_治疗救援():
     """副本中阵亡，会显示【治疗救援】图片"""
-    img = window_capture(game_hwnd)
-    loc = match_img(
-        img,
-        imread2(
-            r"C:\Users\16418\Desktop\zxsj\config\治疗救援.jpg",
-            "治疗救援",
-        ),
-        conf=0.7,
-        to_center=True,
-    )
-    return loc
+    return match_img(None, "治疗救援", conf=0.7)
 
 
 def 检测_原地疗伤():
     """阵亡，会显示【原地疗伤】图片"""
-    img = window_capture(game_hwnd)
-    loc = match_img(
-        img,
-        imread2(
-            r"C:\Users\16418\Desktop\zxsj\config\原地疗伤.jpg",
-            "原地疗伤",
-        ),
-        conf=0.7,
-        to_center=True,
-    )
-    return loc
+    return match_img(None, "原地疗伤", conf=0.7)
 
 
 def 检测_就近疗伤():
     """阵亡，会显示【就近疗伤】图片"""
-    img = window_capture(game_hwnd)
-    loc = match_img(
-        img,
-        imread2(
-            r"C:\Users\16418\Desktop\zxsj\config\就近疗伤.jpg",
-            "就近疗伤",
-        ),
-        conf=0.7,
-        to_center=True,
-    )
-    return loc
-
-
-def 检查_技能距离不够():
-    """技能距离不够，会显示灰色"""
-    img = window_capture(game_hwnd)
-    img_h, img_w = img.shape[:2]
-    loc = match_img(
-        img,
-        imread2(
-            r"C:\Users\16418\Desktop\zxsj\config\距离不够_技能灰色.jpg",
-            "距离不够_技能灰色",
-        ),
-        to_center=True,
-    )
-    if loc is not None and loc[1] > img_h / 2:
-        return loc
-    return None
+    return match_img(None, "就近疗伤", conf=0.7)
 
 
 def 检查_副本退出按钮():
     img = window_capture(game_hwnd)
     img_h, img_w = img.shape[:2]
-    loc = match_img(
-        img,
-        imread2(
-            r"C:\Users\16418\Desktop\zxsj\config\副本中_退出按钮.jpg",
-            "副本中_退出按钮",
-        ),
-        to_center=True,
-    )
+    loc = match_img(img, "副本中_退出按钮")
     if loc is not None and loc[0] > img_w / 2 and loc[1] < img_h / 2:
         return loc
     return None
@@ -465,36 +398,18 @@ def 焚香谷_副本():
 
     if not check_in(1):
         print("准备进入副本")
-        # reverse_macro_all(
-        #     r"C:\Users\16418\Desktop\zxsj\config\开启焚香谷_副本.json",
-        #     random.randint(1, 3),
-        # )
         exe_hotkey(快捷键["副本"])
         time.sleep(random.uniform(1, 2))
         pyautogui.click(1109, 217, duration=random.uniform(1, 2))  # 5人小队
         pyautogui.click(1207, 145, duration=random.uniform(1, 2))  # 普通
 
-        match_玄火烬八荒 = match_img(
-            window_capture(game_hwnd),
-            imread2(
-                r"C:\Users\16418\Desktop\zxsj\config\玄火烬八荒.jpg",
-                "玄火烬八荒",
-            ),
-            conf=0.7,
-        )
-        if match_玄火烬八荒 is None:
+        if match_img(None, "玄火烬八荒", conf=0.7) is None:
             pyautogui.click(1347, 199, duration=random.uniform(1, 2))  # 隐藏大型副本
             pyautogui.click(1484, 495, duration=random.uniform(1, 2))  # 智能队友
         else:
             # 直接找到智能队友,点击
             rectes = match_img(
-                window_capture(game_hwnd),
-                imread2(
-                    r"C:\Users\16418\Desktop\zxsj\config\智能队友.jpg",
-                    "智能队友",
-                ),
-                conf=0.7,
-                ret_list=True,
+                None, "智能队友", conf=0.7, to_center=False, ret_list=True
             )
             if type(rectes) is list:
                 for rect in rectes:
@@ -514,10 +429,8 @@ def 焚香谷_副本():
 
         # 一直检测直到进入副本
         check_in(-1)
-
-        print("进入副本后向前移动")
         pydirectinput.keyDown(快捷键["前"])
-        time.sleep(5)
+        time.sleep(6)
         pydirectinput.keyUp(快捷键["前"])
 
     # 将鼠标移动到左上角
@@ -533,7 +446,7 @@ def 焚香谷_副本():
             time.sleep(random.uniform(1, 2))
             pyautogui.moveTo(2, 2)
 
-        point = 检测_已通关()
+        point = match_img(None, "通关_最小化窗口", conf=0.5)
         if point is not None:
             print("检测到已通关")
             time.sleep(1)
@@ -562,14 +475,7 @@ def 焚香谷_副本():
 
         img = window_capture(game_hwnd)
         img_h, img_w = img.shape[:2]
-        rect = match_img(
-            img,
-            imread2(
-                r"C:\Users\16418\Desktop\zxsj\config\打坐图标.jpg",
-                "打坐图标",
-            ),
-            conf=0.8,
-        )
+        rect = match_img(img, "打坐图标", conf=0.8)
         if rect is not None and rect[1] > img_h / 2:
             break
         time.sleep(random.uniform(0.2, 0.5))
@@ -589,12 +495,7 @@ def 焚香谷_副本():
 
 def 演奏_琴():
     exe_hotkey(快捷键["包裹"])
-    point = match_img(
-        window_capture(),
-        imread2(r"C:\Users\16418\Desktop\zxsj\config\乐器_琴.jpg", "乐器_琴"),
-        0.7,
-        to_center=True,
-    )
+    point = match_img(None, "乐器_琴", 0.7)
     if point is not None:
         pyautogui.click(point[0], point[1], duration=1, button=pyautogui.RIGHT)
         time.sleep(5)
@@ -607,12 +508,7 @@ def 演奏_琴():
 
 def 演奏_笛():
     exe_hotkey(快捷键["包裹"])
-    point = match_img(
-        window_capture(),
-        imread2(r"C:\Users\16418\Desktop\zxsj\config\乐器_笛.jpg", "乐器_笛"),
-        0.7,
-        to_center=True,
-    )
+    point = match_img(None, "乐器_笛", 0.7)
     if point is not None:
         pyautogui.click(point[0], point[1], duration=1, button=pyautogui.RIGHT)
         time.sleep(5)
@@ -641,24 +537,11 @@ def 猜拳():
 
 def 钓鱼():
     # 检查是否持竿
-    if (
-        match_img(
-            window_capture(),
-            imread2(r"C:\Users\16418\Desktop\zxsj\config\鱼_持竿.jpg", "鱼_持竿"),
-            0.7,
-            to_center=True,
-        )
-        is None
-    ):
+    if match_img(None, "鱼_持竿", 0.7) is None:
         # 打开背包，找到鱼竿，然后右键
         exe_hotkey(快捷键["包裹"])
         time.sleep(random.uniform(1, 2))
-        point = match_img(
-            window_capture(),
-            imread2(r"C:\Users\16418\Desktop\zxsj\config\青竹鱼竿.jpg", "青竹鱼竿"),
-            0.7,
-            to_center=True,
-        )
+        point = match_img(None, "青竹鱼竿", 0.7)
         if point is None:
             print("没找到鱼竿")
             return False
@@ -680,15 +563,7 @@ def 钓鱼():
     while True:
         if pause:
             return False
-        if (
-            match_img(
-                window_capture(),
-                imread2(r"C:\Users\16418\Desktop\zxsj\config\鱼_上钩.jpg", "鱼_上钩"),
-                0.7,
-                to_center=True,
-            )
-            is not None
-        ):
+        if match_img(None, "鱼_上钩", 0.7) is not None:
             print("鱼上钩")
             break
 
@@ -701,31 +576,10 @@ def 钓鱼():
         if pause:
             return False
 
-        if (
-            match_img(
-                window_capture(),
-                imread2(r"C:\Users\16418\Desktop\zxsj\config\鱼_收杆.jpg", "鱼_收杆"),
-                0.7,
-            )
-            is None
-        ):
+        if match_img(None, "鱼_收杆", 0.7) is None:
             pydirectinput.keyUp("space")
             print("收杆结束")
             break
-
-        # if (
-        #     match_img(
-        #         window_capture(),
-        #         imread2(r"C:\Users\16418\Desktop\zxsj\config\鱼_挣扎.jpg", "鱼_挣扎"),
-        #         0.7,
-        #     )
-        #     is not None
-        # ):
-        #     print("鱼挣扎")
-        #     pydirectinput.keyUp("space")
-        #     time.sleep(random.uniform(0.5, 1))
-        #     pydirectinput.keyDown("space")
-        #     time.sleep(random.uniform(1.8, 2))
 
         pydirectinput.keyDown("space")
         time.sleep(random.uniform(1.5, 2))
@@ -733,46 +587,24 @@ def 钓鱼():
         time.sleep(random.uniform(0.3, 0.5))
 
 
-def bootstrap():
-    global pause, yolo_model, game_hwnd
+def 常驻签到():
+    exe_hotkey(快捷键["esc"])
+    point = match_img(None, "活动菜单", 0.7)
+    if point is None:
+        return False
 
-    with Listener(on_press=lambda key: not (key == Key.delete)) as hk:
-        while hk.running:
-            print("按delete开始")
-            time.sleep(1)
+    pyautogui.click(point[0], point[1], duration=random.uniform(1, 2))
+    time.sleep(random.uniform(1, 2))
 
-    # yolo_model = YOLO(r"C:\Users\16418\Desktop\zxsj\矿石\train\weights\best.pt")
-    game_hwnd = win32gui.GetForegroundWindow()
-    window_title = win32gui.GetWindowText(game_hwnd)
-    print(window_title)  # ZhuxianClient
+    point = match_img(None, "活动常驻", 0.7)
+    pyautogui.click(point[0], point[1], duration=random.uniform(1, 2))
 
-    with Listener(on_press=on_press_listener) as hk:
-        while hk.running:
-            if pause:
-                time.sleep(1)
-                continue
-
-            焚香谷_副本()
-
-            # if 自动释放技能:
-            #     释放技能(["1", "2", "3"])
-
-            # game_img = window_capture(game_hwnd)
-            # result = yolo_model.predict(
-            #     source=game_img,
-            #     save=False,
-            #     conf=0.7,
-            #     device="0",
-            # )[0]
-            # boxes = result.boxes.data
-            # _, box_map = formatted_boxes(boxes, result.names)
-            # game_img = np.array(result.plot())
-            # cv2.imshow("game_img", game_img)
-            # cv2.waitKey(1)
-
-            # time.sleep(random.uniform(0.1, 0.3))
-
-    cv2.destroyAllWindows()
+    pyautogui.click(447, 319, duration=random.uniform(1, 2))  # 每日签到
+    pyautogui.click(1522, 810, duration=random.uniform(1, 2))  # 签到
+    time.sleep(random.uniform(0.5, 1))
+    exe_hotkey(快捷键["esc"])
+    time.sleep(random.uniform(0.5, 1))
+    exe_hotkey(快捷键["esc"])
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -804,6 +636,7 @@ class MyWidget(QtWidgets.QWidget):
                 "点击鼠标左键",
                 "点击鼠标右键",
                 "猜拳",
+                "常驻签到",
             ]
         )
 
@@ -838,12 +671,12 @@ class MyWidget(QtWidgets.QWidget):
     @QtCore.Slot()
     def get_game_hwdn(self):
         global game_hwnd
-
         time.sleep(3)
+
         game_hwnd = win32gui.GetForegroundWindow()
         window_title = win32gui.GetWindowText(game_hwnd)
         print(window_title)
-        self.绑定游戏窗口.setText(window_title)
+        self.绑定游戏窗口.setText(f"{window_title}")
         rect = win32gui.GetWindowRect(game_hwnd)
         left, top, right, bottom = rect
         w = right - left
@@ -902,9 +735,7 @@ class MyWidget(QtWidgets.QWidget):
         elif action == "挂机按f":
             threading.Thread(target=挂机按f).start()
         elif action == "北荒战云_前往天衡传送门":
-            reverse_macro_all(
-                r"C:\Users\16418\Desktop\zxsj\config\北荒战云_前往天衡传送门.json", 1
-            )
+            reverse_macro_all(r"C:\zxsj\config\北荒战云_前往天衡传送门.json", 1)
         elif action == "点击鼠标左键":
             time.sleep(3)
             for _ in range(int(param1)):
@@ -918,6 +749,8 @@ class MyWidget(QtWidgets.QWidget):
                 time.sleep(0.01)
         elif action == "猜拳":
             threading.Thread(target=猜拳).start()
+        elif action == "常驻签到":
+            threading.Thread(target=常驻签到).start()
 
 
 def on_about_to_quit():
@@ -926,13 +759,22 @@ def on_about_to_quit():
     pause = True
 
 
+def bootstrap():
+    app = QtWidgets.QApplication([])
+    app.aboutToQuit.connect(on_about_to_quit)
+    widget = MyWidget()
+    # widget.resize(800, 300)
+    widget.show()
+    sys.exit(app.exec())
+
+
 # 游戏 1920x1080 全屏
 # 技能释放方式：在目标位置释放
 # 移动方向: 镜头面向
 # 技能释放方向: 角色面向
 # 悬停施法：关闭
 if __name__ == "__main__":
-    time.sleep(2)
+    # time.sleep(2)
     # loc = 检测_聊天玫瑰花()
     # if loc:
     #     pyautogui.moveTo(loc[0], loc[1])
@@ -943,7 +785,7 @@ if __name__ == "__main__":
     # rectes = match_img(
     #     img,
     #     imread2(
-    #         r"C:\Users\16418\Desktop\zxsj\config\智能队友.jpg",
+    #         r"C:\zxsj\config\智能队友.jpg",
     #         "智能队友",
     #     ),
     #     conf=0.7,
@@ -955,9 +797,4 @@ if __name__ == "__main__":
     # cv2.imshow('img', img)
     # cv2.waitKey(0)
 
-    app = QtWidgets.QApplication([])
-    app.aboutToQuit.connect(on_about_to_quit)
-    widget = MyWidget()
-    # widget.resize(800, 300)
-    widget.show()
-    sys.exit(app.exec())
+    bootstrap()
