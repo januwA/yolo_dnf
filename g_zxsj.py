@@ -15,7 +15,7 @@ from PIL import Image, ImageGrab
 import cv2
 import numpy as np
 import pyautogui
-from pynput.keyboard import Listener, Key
+from pynput.keyboard import Listener, Key, GlobalHotKeys
 import pydirectinput
 
 pydirectinput.FAILSAFE = False
@@ -28,8 +28,47 @@ import win32con
 import win32api
 import win32print
 import threading
+from plyer import notification
 
-pause = False
+pause = True
+
+keydown_list = []
+
+
+def key_up(key):
+    if key not in keydown_list:
+        return
+    keydown_list.remove(key)
+    pydirectinput.keyUp(key)
+
+
+def key_down(key):
+    global keydown_list
+    if key in keydown_list:
+        return
+
+    keydown_list.append(key)
+    pydirectinput.keyDown(key)
+
+
+def 修改系统分辨率(width=1920, height=1080):
+    """
+    设置屏幕分辨率。
+
+    Args:
+        width: 宽度像素值。
+        height: 高度像素值。
+    """
+    # 获取当前显示器设置
+    dm = win32api.EnumDisplaySettings(None, 0)
+
+    # 设置新的分辨率
+    dm.PelsWidth = width
+    dm.PelsHeight = height
+
+    # 应用更改
+    win32api.ChangeDisplaySettings(dm, 0)
+    # win32api.ChangeDisplaySettingsEx(dm, 0, win32con.CDS_UPDATEREGISTRY)
 
 
 def rect_center(rect):
@@ -52,9 +91,16 @@ def imread2(p: str, cache_key: str) -> cv2.typing.MatLike:
     return img
 
 
-def match_img(img, temp, conf=0.9, to_center=True, ret_list=False):
+def match_img(img, temp, conf=0.9, to_center=True, ret_list=False, splice=None):
     if img is None:
         img = window_capture()
+
+    if splice is not None and len(splice) == 4:
+        h, w = img.shape[:2]
+        img = img[
+            int(h * splice[0]) : int(h * splice[1]),
+            int(w * splice[2]) : int(w * splice[3]),
+        ]
 
     if type(temp) is str:
         temp = imread2(rf"C:\zxsj\config\{temp}.jpg", temp)
@@ -208,6 +254,9 @@ def window_capture(hwnd=None, usePIL=True, game_rect=None):
 
 
 def exe_hotkey(hk):
+    if type(hk) == str and "+" in hk and len(hk) > 1:
+        hk = hk.split("+")
+
     if type(hk) == list:
         pydirectinput.keyDown(hk[0])
         time.sleep(random.uniform(0.05, 0.15))
@@ -221,39 +270,10 @@ def exe_hotkey(hk):
 
 save_img_i = 0
 save_img_random_string = "".join(random.choice(string.ascii_letters) for _ in range(6))
-自动释放技能 = False
-yolo_model = None
 game_hwnd = None
 
 
-def on_press_listener(key):
-    global pause, save_img_i, 自动释放技能
-    if key == Key.delete:
-        return False
-
-    if key == Key.end:
-        pause = not pause
-        print("暂停" if pause else "继续")
-        return True
-
-    if key == Key.page_down:
-        自动释放技能 = not 自动释放技能
-        return True
-
-    # 游戏截图
-    if key == Key.insert:
-        cv2.imwrite(
-            os.path.join(
-                r"C:\Users\16418\Desktop\zxsj\game_imgs",
-                f"{save_img_random_string}_{save_img_i}.jpg",
-            ),
-            window_capture(game_hwnd, False),
-        )
-        save_img_i += 1
-        return True
-
-
-def 释放技能(_lst: list[str] = None, one=False):
+def 释放技能(_lst: list[str] = None, one=False, 旋转镜头=False):
     """只按快捷键, one循环完一次就退出"""
     lst = (
         [
@@ -266,27 +286,37 @@ def 释放技能(_lst: list[str] = None, one=False):
             # "q", "e", 保命技能
             "r",
             "t",
-            "f1",
-            "f2",
-            "f3",
+            # "f1",
+            # "f2",
+            # "f3",
         ]
         if _lst is None or len(_lst) == 0
         else _lst
     )
     i = 0
-    pydirectinput.press(快捷键["自动选择目标"])
+    exe_hotkey(快捷键["自动选择目标"])
+
+    if 旋转镜头:
+        pydirectinput.keyDown(快捷键["右旋转镜头"])
+
+    lst_len = len(lst)
     while True:
         if pause:
             break
 
-        pydirectinput.press(lst[i])
+        exe_hotkey(lst[i])
         i += 1
-        if i >= len(lst):
+        if i >= lst_len:
             if one:
                 break
             i = 0
-            pydirectinput.press(快捷键["自动选择目标"])
-        time.sleep(random.uniform(0.1, 0.3))
+            exe_hotkey(快捷键["自动选择目标"])
+
+        if lst_len > 1:
+            time.sleep(random.uniform(0.05, 0.1))
+
+    if 旋转镜头:
+        pydirectinput.keyUp(快捷键["右旋转镜头"])
 
 
 def 领取战令():
@@ -519,6 +549,14 @@ def 演奏_笛():
     exe_hotkey(快捷键["esc"])
 
 
+def 点击鼠标(n: int, button: str):
+    for _ in range(n):
+        if pause:
+            break
+        pydirectinput.click(button=button)
+        time.sleep(0.01)
+
+
 def 挂机按f():
     while True:
         if pause:
@@ -536,8 +574,11 @@ def 猜拳():
 
 
 def 钓鱼():
+    _key = "space"
+    pydirectinput.keyUp(_key)
+
     # 检查是否持竿
-    if match_img(None, "鱼_持竿", 0.7) is None:
+    if not match_img(None, "鱼_持竿", 0.7, splice=(0.5, 1, 0, 1)):
         # 打开背包，找到鱼竿，然后右键
         exe_hotkey(快捷键["包裹"])
         time.sleep(random.uniform(1, 2))
@@ -547,13 +588,13 @@ def 钓鱼():
             return False
         else:
             print("持竿")
-            pyautogui.rightClick(point[0], point[1], duration=random.uniform(1, 2))
+            pydirectinput.rightClick(point[0], point[1], duration=random.uniform(1, 2))
             time.sleep(random.uniform(1, 2))
 
     print("抛竿")
-    pydirectinput.keyDown("space")
+    key_down(_key)
     time.sleep(random.uniform(0.6, 1))
-    pydirectinput.keyUp("space")
+    key_up(_key)
 
     time.sleep(random.uniform(2, 3))
 
@@ -563,28 +604,46 @@ def 钓鱼():
     while True:
         if pause:
             return False
-        if match_img(None, "鱼_上钩", 0.7) is not None:
+        img = window_capture()
+        h, w = img.shape[:2]
+        img = img[0 : int(h * 0.3), int(w * 0.2) : int(w * 0.8)]
+
+        if match_img(img, "鱼_上钩", 0.7) and match_img(img, "鱼_收杆", 0.7):
             print("鱼上钩")
             break
 
-        pydirectinput.press("space")  # 收杆
-        time.sleep(random.uniform(0.3, 0.5))
+        pydirectinput.press(_key)  # 收杆
+        time.sleep(random.uniform(0.1, 0.2))
 
     print("开始收杆")
+
+    key_down(_key)
+    time.sleep(random.uniform(1, 2))
+    key_up(_key)
 
     while True:
         if pause:
             return False
 
-        if match_img(None, "鱼_收杆", 0.7) is None:
-            pydirectinput.keyUp("space")
+        img = window_capture()
+        h, w = img.shape[:2]
+        img = img[0 : int(h * 0.3), 0:w]
+
+        鱼_收杆 = match_img(img, "鱼_收杆", 0.7)
+        if not 鱼_收杆:
+            key_up(_key)
             print("收杆结束")
             break
 
-        pydirectinput.keyDown("space")
-        time.sleep(random.uniform(1.5, 2))
-        pydirectinput.keyUp("space")
-        time.sleep(random.uniform(0.3, 0.5))
+        for _ in range(5):
+            if pause:
+                return False
+            key_down(_key)
+            time.sleep(random.uniform(0.3, 0.5))
+            key_up(_key)
+            time.sleep(random.uniform(0.05, 0.1))
+
+        time.sleep(random.uniform(0.1, 0.3))
 
 
 def 常驻签到():
@@ -624,7 +683,8 @@ class MyWidget(QtWidgets.QWidget):
         self.功能选择.addItems(
             [
                 "焚香谷副本",
-                "自动释放技能",
+                "释放技能",
+                "释放技能_旋转镜头",
                 "领取战令",
                 "赠送好友礼物",
                 "修改个性签名",
@@ -637,6 +697,7 @@ class MyWidget(QtWidgets.QWidget):
                 "点击鼠标右键",
                 "猜拳",
                 "常驻签到",
+                "修改系统分辨率",
             ]
         )
 
@@ -653,14 +714,32 @@ class MyWidget(QtWidgets.QWidget):
         self.col_layout.addLayout(self.layout2)
 
         # 绑定快捷键
-        shortcut_end = QtGui.QShortcut(QtGui.QKeySequence("end"), self)
-        shortcut_end.activated.connect(self.handle_shortcut_end)
+        # shortcut_end = QtGui.QShortcut(QtGui.QKeySequence("end"), self)
+        # shortcut_end.activated.connect(self.handle_shortcut_end)
 
-    @QtCore.Slot()
+        h = GlobalHotKeys({"<end>": self.handle_shortcut_end})
+        h.start()
+
+    # @QtCore.Slot()
     def handle_shortcut_end(self):
+        action = self.功能选择.currentText()
         if pause:
+            notification.notify(
+                title="zxsj",
+                message=f"开启脚本:{action}",
+                app_icon=None,  # 通知图标，可选
+                timeout=1,  # 通知显示时长，单位为秒，可选
+            )
+            if not game_hwnd:
+                self.get_game_hwdn(0)
             self.start()
         else:
+            notification.notify(
+                title="zxsj",
+                message=f"停止脚本:{action}",
+                app_icon=None,  # 通知图标，可选
+                timeout=1,  # 通知显示时长，单位为秒，可选
+            )
             self.stop_event()
 
     @QtCore.Slot()
@@ -669,37 +748,42 @@ class MyWidget(QtWidgets.QWidget):
         pause = True
 
     @QtCore.Slot()
-    def get_game_hwdn(self):
+    def get_game_hwdn(self, _sleep=3):
         global game_hwnd
-        time.sleep(3)
+
+        if _sleep:
+            time.sleep(_sleep)
 
         game_hwnd = win32gui.GetForegroundWindow()
         window_title = win32gui.GetWindowText(game_hwnd)
         print(window_title)
+        notification.notify(
+            title="zxsj",
+            message=f"已绑定窗口:{game_hwnd} {window_title}",
+            app_icon=None,  # 通知图标，可选
+            timeout=1,  # 通知显示时长，单位为秒，可选
+        )
         self.绑定游戏窗口.setText(f"{window_title}")
-        rect = win32gui.GetWindowRect(game_hwnd)
-        left, top, right, bottom = rect
-        w = right - left
-        h = bottom - top
-        if w != 1920 and h != 1080:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setText("游戏分辨率必须为1920x1080全屏模式")
-            msg_box.exec()
+        # rect = win32gui.GetWindowRect(game_hwnd)
+        # left, top, right, bottom = rect
+        # w = right - left
+        # h = bottom - top
+        # if w != 1920 and h != 1080:
+        #     msg_box = QtWidgets.QMessageBox()
+        #     msg_box.setText("游戏分辨率必须为1920x1080全屏模式")
+        #     msg_box.exec()
 
     @QtCore.Slot()
     def start(self):
         global game_hwnd, pause
+        param1 = self.param1.text().strip()
 
-        param1 = self.param1.text()
+        if game_hwnd:
+            win32gui.SetForegroundWindow(game_hwnd)
 
-        if not game_hwnd:
-            print("没找到游戏窗口")
-            return
+        pause = False
 
         action = self.功能选择.currentText()
-        win32gui.SetForegroundWindow(game_hwnd)
-        time.sleep(1)
-        pause = False
         if action == "焚香谷副本":
 
             def f1():
@@ -710,8 +794,15 @@ class MyWidget(QtWidgets.QWidget):
                 print("焚香谷_副本 结束")
 
             threading.Thread(target=f1).start()
-        elif action == "自动释放技能":
-            threading.Thread(target=释放技能).start()
+        elif action == "释放技能" or action == "释放技能_旋转镜头":
+            args = [None, False, False]
+            if param1:
+                args[0] = param1.split(",")
+
+            if action == "释放技能_旋转镜头":
+                args[2] = True
+
+            threading.Thread(target=释放技能, args=args).start()
         elif action == "领取战令":
             threading.Thread(target=领取战令).start()
         elif action == "赠送好友礼物":
@@ -737,20 +828,17 @@ class MyWidget(QtWidgets.QWidget):
         elif action == "北荒战云_前往天衡传送门":
             reverse_macro_all(r"C:\zxsj\config\北荒战云_前往天衡传送门.json", 1)
         elif action == "点击鼠标左键":
-            time.sleep(3)
-            for _ in range(int(param1)):
-                pydirectinput.click()
-                time.sleep(0.01)
-
+            n = int(param1) if param1 else 1000
+            threading.Thread(target=点击鼠标, args=[n, pydirectinput.LEFT]).start()
         elif action == "点击鼠标右键":
-            time.sleep(3)
-            for _ in range(int(param1)):
-                pydirectinput.click(button=pydirectinput.RIGHT)
-                time.sleep(0.01)
+            n = int(param1) if param1 else 1000
+            threading.Thread(target=点击鼠标, args=[n, pydirectinput.RIGHT]).start()
         elif action == "猜拳":
             threading.Thread(target=猜拳).start()
         elif action == "常驻签到":
             threading.Thread(target=常驻签到).start()
+        elif action == "修改系统分辨率":
+            修改系统分辨率()
 
 
 def on_about_to_quit():
