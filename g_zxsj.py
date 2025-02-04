@@ -304,7 +304,12 @@ def 释放技能(_lst: list[str] = None, one=False, 旋转镜头=False):
         if pause:
             break
 
-        exe_hotkey(lst[i])
+        if lst[i].startswith("m:"):  # 点击鼠标
+            pydirectinput.click(
+                button=pydirectinput.LEFT if lst[i] == "m:l" else pydirectinput.RIGHT
+            )
+        else:  # 点击键盘
+            exe_hotkey(lst[i])
         i += 1
         if i >= lst_len:
             if one:
@@ -657,7 +662,8 @@ def 常驻签到():
     exe_hotkey(快捷键["esc"])
 
 
-def 剑青云连招():
+def 剑青云连招(loop=False, 移动屏幕=False):
+    global pause
     技能 = {
         "穿星": ["f1", 1.5],
         "御剑诀": ["f2", 0.05],
@@ -667,42 +673,95 @@ def 剑青云连招():
         "镇魔剑罡": ["3", 0.3],
         "剑拂云": ["4", 1.2],
     }
+
+    # 移动屏幕时间 = 0.5 # 镜头转向灵敏度设置为 100
+    移动屏幕时间 = 1.2  # 镜头转向灵敏度设置为 50
     连招 = [
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["青霜剑华"],
+        技能["御剑诀"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["怒剑劫"],
+        技能["御剑诀"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["青霜剑华"],
+        技能["御剑诀"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["镇魔剑罡"],
+        技能["御剑诀"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["穿星"],  # 穿星
+        技能["御剑诀"],
+        技能["御剑诀"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["剑拂云"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["青霜剑华"],
         技能["贯虹"],  # 此时没有真气放技能
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["御剑诀"],
         技能["御剑诀"],
         技能["御剑诀"],
         技能["御剑诀"],
         技能["青霜剑华"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         # 穿插平a等待冷却
         技能["御剑诀"],
         技能["御剑诀"],
-        技能["怒剑劫"],
+        技能["御剑诀"],
+        技能["御剑诀"],
+        技能["青霜剑华"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
         技能["穿星"],  # 穿星
+        技能["御剑诀"],
+        技能["御剑诀"],
         技能["贯虹"],
+        ["left", 移动屏幕时间] if 移动屏幕 else [],
+        #
+        技能["御剑诀"],
+        技能["御剑诀"],
+        技能["御剑诀"],
+        技能["御剑诀"],
     ]
 
-    for k in 连招:
-        if pause:
+    while True:
+        for k in 连招:
+            if len(k) != 2:
+                continue
+
+            if pause:
+                return
+
+            if k[0] == "left":
+                pydirectinput.keyDown(k[0])
+                time.sleep(k[1])
+                pydirectinput.keyUp(k[0])
+            else:
+                pydirectinput.press(k[0])
+                time.sleep(k[1])
+        if not loop:
             break
-        pydirectinput.press(k[0])
-        time.sleep(k[1])
+
+    pause = True
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -721,10 +780,10 @@ class MyWidget(QtWidgets.QWidget):
         self.停止按钮.clicked.connect(self.stop_event)
         self.功能选择.addItems(
             [
-                "焚香谷副本",
+                "剑青云连招",
                 "释放技能",
                 "释放技能_旋转镜头",
-                "剑青云连招",
+                "焚香谷副本",
                 "领取战令",
                 "赠送好友礼物",
                 "修改个性签名",
@@ -732,8 +791,6 @@ class MyWidget(QtWidgets.QWidget):
                 "演奏 笛",
                 "北荒战云_前往天衡传送门",
                 "钓鱼",
-                "点击鼠标左键",
-                "点击鼠标右键",
                 "猜拳",
                 "常驻签到",
                 "修改系统分辨率",
@@ -751,10 +808,6 @@ class MyWidget(QtWidgets.QWidget):
         self.param1 = QtWidgets.QLineEdit(self)
         self.layout2.addWidget(self.param1)
         self.col_layout.addLayout(self.layout2)
-
-        # 绑定快捷键
-        # shortcut_end = QtGui.QShortcut(QtGui.QKeySequence("end"), self)
-        # shortcut_end.activated.connect(self.handle_shortcut_end)
 
         h = GlobalHotKeys(
             {
@@ -848,7 +901,13 @@ class MyWidget(QtWidgets.QWidget):
 
             threading.Thread(target=释放技能, args=args).start()
         elif action == "剑青云连招":
-            threading.Thread(target=剑青云连招).start()
+            args = [False, False]
+            if param1:
+                ps = param1.split(",")
+                if len(ps) == 2:
+                    args[0] = ps[0] == "1"
+                    args[1] = ps[1] == "1"
+            threading.Thread(target=剑青云连招, args=args).start()
         elif action == "领取战令":
             threading.Thread(target=领取战令).start()
         elif action == "赠送好友礼物":
@@ -871,12 +930,6 @@ class MyWidget(QtWidgets.QWidget):
             threading.Thread(target=演奏_笛).start()
         elif action == "北荒战云_前往天衡传送门":
             reverse_macro_all(r"C:\zxsj\config\北荒战云_前往天衡传送门.json", 1)
-        elif action == "点击鼠标左键":
-            n = int(param1) if param1 else 1000
-            threading.Thread(target=点击鼠标, args=[n, pydirectinput.LEFT]).start()
-        elif action == "点击鼠标右键":
-            n = int(param1) if param1 else 1000
-            threading.Thread(target=点击鼠标, args=[n, pydirectinput.RIGHT]).start()
         elif action == "猜拳":
             threading.Thread(target=猜拳).start()
         elif action == "常驻签到":
