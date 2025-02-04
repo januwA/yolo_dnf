@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 from typing import Mapping
 
@@ -8,14 +9,14 @@ from demo_km_macro import reverse_macro_all
 os.environ["YOLO_VERBOSE"] = str(False)
 
 import sys
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets
 import string
 import time
 from PIL import Image, ImageGrab
 import cv2
 import numpy as np
 import pyautogui
-from pynput.keyboard import Listener, Key, GlobalHotKeys
+from pynput.keyboard import Key, GlobalHotKeys
 import pydirectinput
 
 pydirectinput.FAILSAFE = False
@@ -664,15 +665,18 @@ def 常驻签到():
 
 def 剑青云连招(loop=False, 移动屏幕=False):
     global pause
-    技能 = {
-        "穿星": ["f1", 1.5],
-        "御剑诀": ["f2", 0.05],
-        "贯虹": ["f3", 0.5],
-        "青霜剑华": ["1", 0.5],
-        "怒剑劫": ["2", 0.5],
-        "镇魔剑罡": ["3", 0.3],
-        "剑拂云": ["4", 1.2],
-    }
+    # 技能 = {
+    #     "穿星": ["f1", 1.5],
+    #     "御剑诀": ["f2", 0.05],
+    #     "贯虹": ["f3", 0.5],
+    #     "青霜剑华": ["1", 0.5],
+    #     "怒剑劫": ["2", 0.5],
+    #     "镇魔剑罡": ["3", 0.3],
+    #     "剑拂云": ["4", 1.2],
+    # }
+    技能 = {}
+    with open(r"C:\zxsj\config\剑青云_物理.json", encoding="utf-8") as f:
+        技能 = json.load(f)
 
     # 移动屏幕时间 = 0.5 # 镜头转向灵敏度设置为 100
     移动屏幕时间 = 1.2  # 镜头转向灵敏度设置为 50
@@ -680,29 +684,27 @@ def 剑青云连招(loop=False, 移动屏幕=False):
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
-        技能["青霜剑华"],
         技能["御剑诀"],
+        技能["御剑诀"],
+        技能["青霜剑华"],
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
         技能["怒剑劫"],
-        技能["御剑诀"],
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
-        技能["青霜剑华"],
         技能["御剑诀"],
+        技能["御剑诀"],
+        技能["青霜剑华"],
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
         技能["镇魔剑罡"],
-        技能["御剑诀"],
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
         技能["穿星"],  # 穿星
-        技能["御剑诀"],
-        技能["御剑诀"],
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
@@ -710,6 +712,8 @@ def 剑青云连招(loop=False, 移动屏幕=False):
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
+        技能["御剑诀"],
+        技能["御剑诀"],
         技能["青霜剑华"],
         技能["贯虹"],  # 此时没有真气放技能
         ["left", 移动屏幕时间] if 移动屏幕 else [],
@@ -722,7 +726,6 @@ def 剑青云连招(loop=False, 移动屏幕=False):
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
-        # 穿插平a等待冷却
         技能["御剑诀"],
         技能["御剑诀"],
         技能["御剑诀"],
@@ -731,12 +734,12 @@ def 剑青云连招(loop=False, 移动屏幕=False):
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
         #
+        技能["御剑诀"],
+        技能["御剑诀"],
         技能["穿星"],  # 穿星
-        技能["御剑诀"],
-        技能["御剑诀"],
         技能["贯虹"],
         ["left", 移动屏幕时间] if 移动屏幕 else [],
-        #
+        # 为下次循环做准备
         技能["御剑诀"],
         技能["御剑诀"],
         技能["御剑诀"],
@@ -901,7 +904,7 @@ class MyWidget(QtWidgets.QWidget):
 
             threading.Thread(target=释放技能, args=args).start()
         elif action == "剑青云连招":
-            args = [False, False]
+            args = [True, False]
             if param1:
                 ps = param1.split(",")
                 if len(ps) == 2:
@@ -958,6 +961,7 @@ def bootstrap():
 # 传统模式，移动方向: 镜头面向
 # 传统模式，技能释放方向: 角色面向
 # 悬停施法：关闭
+# pyinstaller -F --hidden-import plyer.platforms.win.notification g_zxsj.py
 if __name__ == "__main__":
     # loc = 检测_聊天玫瑰花()
     # if loc:

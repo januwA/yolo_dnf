@@ -303,9 +303,11 @@ pip install pyinstaller
 
 ## 打包
 
-```
+```sh
 单个exe，运行速度慢
 pyinstaller -F main.py
+
+pyinstaller -F --hidden-import plyer.platforms.win.notification main.py
 
 pyinstaller main.py -y
 
