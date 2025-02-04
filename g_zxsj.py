@@ -277,6 +277,7 @@ def 释放技能(_lst: list[str] = None, one=False, 旋转镜头=False):
     """只按快捷键, one循环完一次就退出"""
     lst = (
         [
+            快捷键["自动选择目标"],
             "1",
             "2",
             "3",
@@ -294,7 +295,6 @@ def 释放技能(_lst: list[str] = None, one=False, 旋转镜头=False):
         else _lst
     )
     i = 0
-    exe_hotkey(快捷键["自动选择目标"])
 
     if 旋转镜头:
         pydirectinput.keyDown(快捷键["右旋转镜头"])
@@ -310,7 +310,6 @@ def 释放技能(_lst: list[str] = None, one=False, 旋转镜头=False):
             if one:
                 break
             i = 0
-            exe_hotkey(快捷键["自动选择目标"])
 
         if lst_len > 1:
             time.sleep(random.uniform(0.05, 0.1))
@@ -557,14 +556,6 @@ def 点击鼠标(n: int, button: str):
         time.sleep(0.01)
 
 
-def 挂机按f():
-    while True:
-        if pause:
-            return False
-        pydirectinput.press("f")
-        time.sleep(random.uniform(0.5, 1))  # 进度条
-
-
 def 猜拳():
     while True:
         if pause:
@@ -666,6 +657,54 @@ def 常驻签到():
     exe_hotkey(快捷键["esc"])
 
 
+def 剑青云连招():
+    技能 = {
+        "穿星": ["f1", 1.5],
+        "御剑诀": ["f2", 0.05],
+        "贯虹": ["f3", 0.5],
+        "青霜剑华": ["1", 0.5],
+        "怒剑劫": ["2", 0.5],
+        "镇魔剑罡": ["3", 0.3],
+        "剑拂云": ["4", 1.2],
+    }
+    连招 = [
+        技能["贯虹"],
+        技能["青霜剑华"],
+        技能["贯虹"],
+        技能["怒剑劫"],
+        技能["贯虹"],
+        技能["青霜剑华"],
+        技能["贯虹"],
+        技能["镇魔剑罡"],
+        技能["贯虹"],
+        技能["穿星"],  # 穿星
+        技能["贯虹"],
+        技能["剑拂云"],
+        技能["贯虹"],
+        技能["青霜剑华"],
+        技能["贯虹"],  # 此时没有真气放技能
+        技能["御剑诀"],
+        技能["御剑诀"],
+        技能["御剑诀"],
+        技能["御剑诀"],
+        技能["青霜剑华"],
+        技能["贯虹"],
+        # 穿插平a等待冷却
+        技能["御剑诀"],
+        技能["御剑诀"],
+        技能["怒剑劫"],
+        技能["贯虹"],
+        技能["穿星"],  # 穿星
+        技能["贯虹"],
+    ]
+
+    for k in 连招:
+        if pause:
+            break
+        pydirectinput.press(k[0])
+        time.sleep(k[1])
+
+
 class MyWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -678,19 +717,19 @@ class MyWidget(QtWidgets.QWidget):
         self.功能选择 = QtWidgets.QComboBox()
 
         self.启动按钮.clicked.connect(self.start)
-        self.绑定游戏窗口.clicked.connect(self.get_game_hwdn)
+        self.绑定游戏窗口.clicked.connect(lambda: self.get_game_hwdn(3))
         self.停止按钮.clicked.connect(self.stop_event)
         self.功能选择.addItems(
             [
                 "焚香谷副本",
                 "释放技能",
                 "释放技能_旋转镜头",
+                "剑青云连招",
                 "领取战令",
                 "赠送好友礼物",
                 "修改个性签名",
                 "演奏 琴",
                 "演奏 笛",
-                "挂机按f",
                 "北荒战云_前往天衡传送门",
                 "钓鱼",
                 "点击鼠标左键",
@@ -717,7 +756,12 @@ class MyWidget(QtWidgets.QWidget):
         # shortcut_end = QtGui.QShortcut(QtGui.QKeySequence("end"), self)
         # shortcut_end.activated.connect(self.handle_shortcut_end)
 
-        h = GlobalHotKeys({"<end>": self.handle_shortcut_end})
+        h = GlobalHotKeys(
+            {
+                "<end>": self.handle_shortcut_end,
+                # "<f4>": 剑青云连招,
+            }
+        )
         h.start()
 
     # @QtCore.Slot()
@@ -803,6 +847,8 @@ class MyWidget(QtWidgets.QWidget):
                 args[2] = True
 
             threading.Thread(target=释放技能, args=args).start()
+        elif action == "剑青云连招":
+            threading.Thread(target=剑青云连招).start()
         elif action == "领取战令":
             threading.Thread(target=领取战令).start()
         elif action == "赠送好友礼物":
@@ -823,8 +869,6 @@ class MyWidget(QtWidgets.QWidget):
             threading.Thread(target=演奏_琴).start()
         elif action == "演奏 笛":
             threading.Thread(target=演奏_笛).start()
-        elif action == "挂机按f":
-            threading.Thread(target=挂机按f).start()
         elif action == "北荒战云_前往天衡传送门":
             reverse_macro_all(r"C:\zxsj\config\北荒战云_前往天衡传送门.json", 1)
         elif action == "点击鼠标左键":
@@ -858,11 +902,10 @@ def bootstrap():
 
 # 游戏 1920x1080 全屏
 # 技能释放方式：在目标位置释放
-# 移动方向: 镜头面向
-# 技能释放方向: 角色面向
+# 传统模式，移动方向: 镜头面向
+# 传统模式，技能释放方向: 角色面向
 # 悬停施法：关闭
 if __name__ == "__main__":
-    # time.sleep(2)
     # loc = 检测_聊天玫瑰花()
     # if loc:
     #     pyautogui.moveTo(loc[0], loc[1])
