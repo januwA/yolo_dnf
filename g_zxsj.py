@@ -693,7 +693,7 @@ def 剑青云连招():
     # 第2个穿星
     连招 += 青霜_贯虹 + 普攻4  # 现在有足够的真气放青霜
     连招 += [技能["剑拂云"], 技能["贯虹"]] + 普攻2
-    连招 += 青霜_贯虹 + 普攻4 # 释放 剑拂云 免气用一次青霜
+    连招 += 青霜_贯虹 + 普攻4  # 释放 剑拂云 免气用一次青霜
     连招 += 青霜_贯虹 + 普攻4
     连招 += [技能["穿星"]] + 普攻2
 
@@ -716,19 +716,19 @@ def 剑青云连招():
 
 
 class MyWidget(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, shortcut_key="`"):
         super().__init__()
-        self.col_layout = QtWidgets.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
 
-        self.layout = QtWidgets.QHBoxLayout(self)
-        self.启动按钮 = QtWidgets.QPushButton("确定")
-        self.停止按钮 = QtWidgets.QPushButton("停止")
-        self.绑定游戏窗口 = QtWidgets.QPushButton("绑定游戏窗口")
+        启动按钮 = QtWidgets.QPushButton("确定")
+        停止按钮 = QtWidgets.QPushButton("停止")
+        快捷键label = QtWidgets.QLabel(f"快捷键:{shortcut_key}")
+        绑定游戏窗口 = QtWidgets.QPushButton("绑定游戏窗口")
         self.功能选择 = QtWidgets.QComboBox()
 
-        self.启动按钮.clicked.connect(self.start)
-        self.绑定游戏窗口.clicked.connect(lambda: self.get_game_hwdn(3))
-        self.停止按钮.clicked.connect(self.stop_event)
+        启动按钮.clicked.connect(self.start)
+        绑定游戏窗口.clicked.connect(lambda: self.get_game_hwdn(3))
+        停止按钮.clicked.connect(self.stop_event)
         self.功能选择.addItems(
             [
                 "剑青云连招",
@@ -748,22 +748,23 @@ class MyWidget(QtWidgets.QWidget):
             ]
         )
 
-        self.layout.addWidget(self.绑定游戏窗口)
-        self.layout.addWidget(self.功能选择)
-        self.layout.addWidget(self.启动按钮)
-        self.layout.addWidget(self.停止按钮)
-        self.col_layout.addLayout(self.layout)
+        row1 = QtWidgets.QHBoxLayout()
+        row1.addWidget(绑定游戏窗口)
+        row1.addWidget(self.功能选择)
+        row1.addWidget(启动按钮)
+        row1.addWidget(停止按钮)
+        row1.addWidget(快捷键label)
+        layout.addLayout(row1)
 
         # 参数行
-        self.layout2 = QtWidgets.QHBoxLayout(self)
-        self.param1 = QtWidgets.QLineEdit(self)
-        self.layout2.addWidget(self.param1)
-        self.col_layout.addLayout(self.layout2)
+        self.param1 = QtWidgets.QLineEdit()
+        row2 = QtWidgets.QHBoxLayout()
+        row2.addWidget(self.param1)
+        layout.addLayout(row2)
 
         h = GlobalHotKeys(
             {
-                "<end>": self.handle_shortcut_end,
-                # "<f4>": 剑青云连招,
+                shortcut_key: self.handle_shortcut_end,
             }
         )
         h.start()
@@ -811,7 +812,6 @@ class MyWidget(QtWidgets.QWidget):
             app_icon=None,  # 通知图标，可选
             timeout=1,  # 通知显示时长，单位为秒，可选
         )
-        self.绑定游戏窗口.setText(f"{window_title}")
         # rect = win32gui.GetWindowRect(game_hwnd)
         # left, top, right, bottom = rect
         # w = right - left
@@ -892,8 +892,12 @@ def on_about_to_quit():
 def bootstrap():
     app = QtWidgets.QApplication([])
     app.aboutToQuit.connect(on_about_to_quit)
-    widget = MyWidget()
-    # widget.resize(800, 300)
+
+    shortcut_key: str = "`"
+    if len(sys.argv[1:]):
+        shortcut_key = sys.argv[1:][0]
+
+    widget = MyWidget(shortcut_key)
     widget.show()
     sys.exit(app.exec())
 
