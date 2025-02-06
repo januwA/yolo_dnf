@@ -663,20 +663,48 @@ def 常驻签到():
     exe_hotkey(快捷键["esc"])
 
 
-def 剑青云连招():
+def 法术_剑青云连招():
     global pause
-    # 技能 = {
-    #     "穿星": ["f1", 1.5],
-    #     "御剑诀": ["f2", 0],
-    #     "贯虹": ["f3", 0.1],
-    #     "青霜剑华": ["1", 0],
-    #     "怒剑劫": ["2", 0],
-    #     "镇魔剑罡": ["3", 0],
-    #     "剑拂云": ["4", 1.2],
-    # }
-    技能 = {}
-    with open(r"C:\zxsj\config\剑青云_物理.json", encoding="utf-8") as f:
-        技能 = json.load(f)
+    技能 = {
+        "纵剑诀": ["f2", 0],
+        "青霜剑华": ["1", 0.5],
+        "先天一气剑阵": ["3", 1.5],
+    }
+    连招 = [
+        技能["纵剑诀"], 技能["纵剑诀"], 技能["纵剑诀"], 技能["纵剑诀"],
+        技能["青霜剑华"],
+        技能["先天一气剑阵"],
+        技能["纵剑诀"], 技能["纵剑诀"], 技能["纵剑诀"], 技能["纵剑诀"],
+        技能["先天一气剑阵"],
+    ]
+    while True:
+        for k in 连招:
+            if len(k) != 2:
+                continue
+
+            if pause:
+                return
+
+            pydirectinput.press(k[0])
+            if k[1] > 0:
+                time.sleep(k[1])
+
+
+def 物理_剑青云连招():
+    global pause
+    技能 = {
+        "穿星": ["f1", 1.5],
+        "御剑诀": ["f2", 0],
+        "贯虹": ["f3", 0.3],
+        "青霜剑华": ["1", 0.1],
+        "怒剑劫": ["2", 0],
+        "镇魔剑罡": ["3", 0],
+        "剑拂云": ["4", 1.2],
+        "横剑凌空": ["e", 0.1],
+    }
+    # 技能 = {}
+    # with open(r"C:\zxsj\config\剑青云_物理.json", encoding="utf-8") as f:
+    #     技能 = json.load(f)
 
     普攻2 = [技能["御剑诀"], 技能["御剑诀"]]
     普攻4 = 普攻2 + 普攻2
@@ -705,14 +733,9 @@ def 剑青云连招():
             if pause:
                 return
 
-            if k[0] == "left":
-                pydirectinput.keyDown(k[0])
+            pydirectinput.press(k[0])
+            if k[1] > 0:
                 time.sleep(k[1])
-                pydirectinput.keyUp(k[0])
-            else:
-                pydirectinput.press(k[0])
-                if k[1] > 0:
-                    time.sleep(k[1])
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -731,7 +754,8 @@ class MyWidget(QtWidgets.QWidget):
         停止按钮.clicked.connect(self.stop_event)
         self.功能选择.addItems(
             [
-                "剑青云连招",
+                "物理_剑青云连招",
+                "法术_剑青云连招",
                 "释放技能",
                 "释放技能_旋转镜头",
                 "焚香谷副本",
@@ -851,8 +875,10 @@ class MyWidget(QtWidgets.QWidget):
                 args[2] = True
 
             threading.Thread(target=释放技能, args=args).start()
-        elif action == "剑青云连招":
-            threading.Thread(target=剑青云连招).start()
+        elif action == "物理_剑青云连招":
+            threading.Thread(target=物理_剑青云连招).start()
+        elif action == "法术_剑青云连招":
+            threading.Thread(target=法术_剑青云连招).start()
         elif action == "领取战令":
             threading.Thread(target=领取战令).start()
         elif action == "赠送好友礼物":

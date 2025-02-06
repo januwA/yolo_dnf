@@ -307,7 +307,7 @@ pip install pyinstaller
 单个exe，运行速度慢
 pyinstaller -F main.py
 
-pyinstaller -F --hidden-import plyer.platforms.win.notification main.py
+pyinstaller -F -w --hidden-import plyer.platforms.win.notification main.py
 
 pyinstaller main.py -y
 
