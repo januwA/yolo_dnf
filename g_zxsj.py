@@ -3,6 +3,8 @@ import json
 import os
 from typing import Mapping
 
+import pynput
+
 from demo_km_macro import reverse_macro_all
 
 # 取消yolo打印信息
@@ -553,6 +555,7 @@ def 演奏_笛():
     time.sleep(10)
     exe_hotkey(快捷键["esc"])
 
+
 def 猜拳():
     while True:
         if pause:
@@ -659,17 +662,20 @@ def 法术_剑青云连招():
     # 技能 = {
     #     "纵剑诀": ["f2", 0],
     #     "青霜剑华": ["1", 0.5],
-    #     "先天一气剑阵": ["3", 1.5],
     # }
     技能 = {}
     with open(r"C:\zxsj\config\剑青云_法术.json", encoding="utf-8") as f:
         技能 = json.load(f)
     连招 = [
-        技能["纵剑诀"], 技能["纵剑诀"], 技能["纵剑诀"], 技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
         技能["青霜剑华"],
-        技能["先天一气剑阵"],
-        技能["纵剑诀"], 技能["纵剑诀"], 技能["纵剑诀"], 技能["纵剑诀"],
-        技能["先天一气剑阵"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
     ]
     while True:
         for k in 连招:
@@ -786,13 +792,21 @@ class MyWidget(QtWidgets.QWidget):
         )
         h.start()
 
+        # 长按鼠标左键停止连招脚本
+        def on_click_callback(x, y, button, pressed):
+            if button == pynput.mouse.Button.left:
+                if not pause and "连招" in self.功能选择.currentText():
+                    self.handle_shortcut_end()
+
+        pynput.mouse.Listener(on_click=on_click_callback).start()
+
     # @QtCore.Slot()
     def handle_shortcut_end(self):
         action = self.功能选择.currentText()
         if pause:
             notification.notify(
-                title="zxsj",
                 message=f"开启脚本:{action}",
+                app_name="zxsj",
                 app_icon=None,  # 通知图标，可选
                 timeout=1,  # 通知显示时长，单位为秒，可选
             )
@@ -801,8 +815,8 @@ class MyWidget(QtWidgets.QWidget):
             self.start()
         else:
             notification.notify(
-                title="zxsj",
                 message=f"停止脚本:{action}",
+                app_name="zxsj",
                 app_icon=None,  # 通知图标，可选
                 timeout=1,  # 通知显示时长，单位为秒，可选
             )
@@ -824,7 +838,7 @@ class MyWidget(QtWidgets.QWidget):
         window_title = win32gui.GetWindowText(game_hwnd)
         print(window_title)
         notification.notify(
-            title="zxsj",
+            app_name="zxsj",
             message=f"已绑定窗口:{game_hwnd} {window_title}",
             app_icon=None,  # 通知图标，可选
             timeout=1,  # 通知显示时长，单位为秒，可选
