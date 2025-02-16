@@ -657,6 +657,63 @@ def 常驻签到():
     exe_hotkey(快捷键["esc"])
 
 
+def 雷龙_雷青云连招():
+    global pause
+    # 技能 = {
+    #     "怒剑劫": ["1", 0.5],
+    #     "太极玄天剑": ["2", 0.5],
+    #     "真霆雷动": ["3", 2], # 恢复一次 先天一气剑阵
+    #     "先天一气剑阵": ["q", 1.5], # 2
+    #     "引雷诀": ["e", 0.7],
+    #     "雷光遁龙决": ["r", 1],
+    #     "纵剑诀": ["f2", 0.1],
+    # }
+    技能 = {}
+    with open(r"C:\zxsj\config\雷龙_雷青云.json", encoding="utf-8") as f:
+        技能 = json.load(f)
+    连招 = [
+        技能['怒剑劫'],
+        技能['雷光遁龙决'],
+        
+        技能['先天一气剑阵'],
+        技能['太极玄天剑'],
+        技能['引雷诀'],
+        
+        技能['真霆雷动'],
+        
+        技能['先天一气剑阵'],
+        技能['太极玄天剑'],
+        技能['引雷诀'],
+        
+        技能['纵剑诀'],
+        技能['纵剑诀'],
+        技能['纵剑诀'],
+        技能['纵剑诀'],
+        技能['先天一气剑阵'],
+        技能['引雷诀'],
+        
+        技能['真霆雷动'],
+        
+        技能['纵剑诀'],
+        技能['纵剑诀'],
+        技能['纵剑诀'],
+        技能['纵剑诀'],
+        技能['先天一气剑阵'],
+        技能['引雷诀'],
+    ]
+    
+    while True:
+        for k in 连招:
+            if len(k) != 2:
+                continue
+
+            if pause:
+                return
+
+            pydirectinput.press(k[0])
+            if k[1] > 0:
+                time.sleep(k[1])
+
 def 法术_剑青云连招():
     global pause
     # 技能 = {
@@ -755,6 +812,7 @@ class MyWidget(QtWidgets.QWidget):
             [
                 "物理_剑青云连招",
                 "法术_剑青云连招",
+                "雷龙_雷青云连招",
                 "释放技能",
                 "释放技能_旋转镜头",
                 "焚香谷副本",
@@ -886,6 +944,8 @@ class MyWidget(QtWidgets.QWidget):
             threading.Thread(target=物理_剑青云连招).start()
         elif action == "法术_剑青云连招":
             threading.Thread(target=法术_剑青云连招).start()
+        elif action == "雷龙_雷青云连招":
+            threading.Thread(target=雷龙_雷青云连招).start()
         elif action == "领取战令":
             threading.Thread(target=领取战令).start()
         elif action == "赠送好友礼物":
