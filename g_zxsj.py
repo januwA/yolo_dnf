@@ -94,7 +94,16 @@ def imread2(p: str, cache_key: str) -> cv2.typing.MatLike:
     return img
 
 
-def match_img(img, temp, conf=0.9, to_center=True, ret_list=False, splice=None):
+def match_img(
+    img,
+    temp,
+    conf=0.9,
+    to_center=True,
+    ret_list=False,
+    splice=None,
+    to_rect=False,
+    method_method=cv2.TM_CCOEFF_NORMED,
+):
     if img is None:
         img = window_capture()
 
@@ -109,7 +118,7 @@ def match_img(img, temp, conf=0.9, to_center=True, ret_list=False, splice=None):
         temp = imread2(rf"C:\zxsj\config\{temp}.jpg", temp)
 
     temp_h, temp_w = temp.shape[:2]
-    res = cv2.matchTemplate(img, temp, cv2.TM_CCOEFF_NORMED)
+    res = cv2.matchTemplate(img, temp, method_method)
     _, maxVal, _, maxLoc = cv2.minMaxLoc(res)
     # print(f"{maxVal=}")
     loc = np.where(res >= conf)
@@ -135,6 +144,14 @@ def match_img(img, temp, conf=0.9, to_center=True, ret_list=False, splice=None):
                     maxLoc[1] + temp_h,
                 )
             )
+        if to_rect:
+            maxLoc = (
+                maxLoc[0],
+                maxLoc[1],
+                maxLoc[0] + temp_w,
+                maxLoc[1] + temp_h,
+            )
+
         return maxLoc
     return None
 
@@ -566,7 +583,6 @@ def 猜拳():
 
 def 钓鱼():
     _key = "space"
-    pydirectinput.keyUp(_key)
 
     # 检查是否持竿
     if not match_img(None, "鱼_持竿", 0.7, splice=(0.5, 1, 0, 1)):
@@ -582,10 +598,9 @@ def 钓鱼():
             pydirectinput.rightClick(point[0], point[1], duration=random.uniform(1, 2))
             time.sleep(random.uniform(1, 2))
 
-    print("抛竿")
-    key_down(_key)
-    time.sleep(random.uniform(0.6, 1))
-    key_up(_key)
+    pydirectinput.keyDown(_key)
+    time.sleep(2)
+    pydirectinput.keyUp(_key)
 
     time.sleep(random.uniform(2, 3))
 
@@ -608,33 +623,66 @@ def 钓鱼():
 
     print("开始收杆")
 
-    key_down(_key)
-    time.sleep(random.uniform(1, 2))
-    key_up(_key)
-
     while True:
         if pause:
             return False
 
         img = window_capture()
         h, w = img.shape[:2]
-        img = img[0 : int(h * 0.3), 0:w]
 
-        鱼_收杆 = match_img(img, "鱼_收杆", 0.7)
+        # 钓鱼上方ui
+        img = img[int(h * 0.05) : int(h * 0.15), int(w * 0.3) : int(w * 0.7)]
+
+        key_down(_key)
+
+        鱼_收杆 = match_img(
+            img,
+            "鱼_收杆",
+            0.7,
+            to_center=False,
+            to_rect=True,
+        )
         if not 鱼_收杆:
             key_up(_key)
             print("收杆结束")
             break
 
-        for _ in range(5):
-            if pause:
-                return False
-            key_down(_key)
-            time.sleep(random.uniform(0.3, 0.5))
-            key_up(_key)
-            time.sleep(random.uniform(0.05, 0.1))
+        鱼_挣扎 = match_img(
+            img,
+            "鱼_挣扎",
+            0.8,
+            to_center=False,
+            to_rect=True,
+        )
+        if 鱼_挣扎 is not None:
+            x1, y1, x2, y2 = 鱼_挣扎
+            temp_w = x2 - x1
+            if x2 > 鱼_收杆[0] - temp_w:
+                # 转换为HSV颜色空间
+                hsv_image = cv2.cvtColor(img[y1:y2, x1:x2], cv2.COLOR_BGR2HSV)
+
+                # 定义红色的HSV范围
+                lower_red = np.array([0, 100, 100])
+                upper_red = np.array([10, 255, 255])
+
+                # 创建红色掩码
+                mask = cv2.inRange(hsv_image, lower_red, upper_red)
+                loc = np.where(mask >= 0.8)
+                loc_lst = list(zip(*loc[::-1]))
+                if len(loc_lst):
+                    # cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    # cv2.imwrite(f"./a_{x1}_{y1}_{x2}_{y2}.jpg", img)
+
+                    key_up(_key)
+                    for _ in range(random.randint(4, 6)):
+                        if pause:
+                            return False
+                        pydirectinput.press(_key)
 
         time.sleep(random.uniform(0.1, 0.3))
+
+    # 等待收杆动作
+    time.sleep(5)
 
 
 def 常驻签到():
@@ -672,36 +720,30 @@ def 雷龙_雷青云连招():
     with open(r"C:\zxsj\config\雷龙_雷青云.json", encoding="utf-8") as f:
         技能 = json.load(f)
     连招 = [
-        技能['怒剑劫'],
-        技能['雷光遁龙决'],
-        
-        技能['先天一气剑阵'],
-        技能['太极玄天剑'],
-        技能['引雷诀'],
-        
-        技能['真霆雷动'],
-        
-        技能['先天一气剑阵'],
-        技能['太极玄天剑'],
-        技能['引雷诀'],
-        
-        技能['纵剑诀'],
-        技能['纵剑诀'],
-        技能['纵剑诀'],
-        技能['纵剑诀'],
-        技能['先天一气剑阵'],
-        技能['引雷诀'],
-        
-        技能['真霆雷动'],
-        
-        技能['纵剑诀'],
-        技能['纵剑诀'],
-        技能['纵剑诀'],
-        技能['纵剑诀'],
-        技能['先天一气剑阵'],
-        技能['引雷诀'],
+        技能["怒剑劫"],
+        技能["雷光遁龙决"],
+        技能["先天一气剑阵"],
+        技能["太极玄天剑"],
+        技能["引雷诀"],
+        技能["真霆雷动"],
+        技能["先天一气剑阵"],
+        技能["太极玄天剑"],
+        技能["引雷诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["先天一气剑阵"],
+        技能["引雷诀"],
+        技能["真霆雷动"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["纵剑诀"],
+        技能["先天一气剑阵"],
+        技能["引雷诀"],
     ]
-    
+
     while True:
         for k in 连招:
             if len(k) != 2:
@@ -713,6 +755,7 @@ def 雷龙_雷青云连招():
             pydirectinput.press(k[0])
             if k[1] > 0:
                 time.sleep(k[1])
+
 
 def 法术_剑青云连招():
     global pause

@@ -106,13 +106,13 @@ def handle_img(img, lower, upper):
 
 
 if __name__ == "__main__":
-    img = imread2(r"C:\Users\16418\Desktop\微信截图_20250117155521.png")
-    # test_hsv(img)
+    img = imread2(r"C:\Users\16418\Desktop\微信截图_20250216144200.jpg")
+    test_hsv(img)
     
     # 提取矿石
-    outimg = handle_img(
-        img,
-        [20, 127, 192],
-        [80, 255, 255],
-    )
-    cv2.imwrite("1.jpg", outimg)
+    # outimg = handle_img(
+    #     img,
+    #     [20, 127, 192],
+    #     [80, 255, 255],
+    # )
+    # cv2.imwrite("1.jpg", outimg)
